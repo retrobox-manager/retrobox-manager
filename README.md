@@ -1,51 +1,37 @@
-<p align="center">
-  <img src="resources/img/retrobox_manager.png" alt="Retrobox Manager" width="480"/>
-</p>
+## 🇫🇷 Français
 
-# retrobox-manager
+Bienvenue sur mon projet ! Voici les étapes pour l’installer, le configurer et l’utiliser :
 
-Project to manage my Retrobox
+1. Télécharge l’exécutable depuis la dernière version disponible (release).
+2. Renseigne les informations dans l’écran de configuration au premier démarrage.
+3. Sélectionne l’action à effectuer.
+4. Lance l’action.
 
-## Packaging
+Des vidéos tutoriels sont disponibles sur ma chaîne YouTube :  
+🎥 [Visiter ma chaîne](https://www.youtube.com/@jaylooty_official)
 
-```bash
-raw_version=$(head -n 1 CHANGELOG | awk '{print $1}')
-version="${raw_version#R}"
-python3 -m PyInstaller --name "retrobox-manager" --onefile --noconsole --icon=resources/img/retrobox.ico retrobox-manager.py --add-data "resources:resources" --add-data "CHANGELOG:." ; rm -Rf build ; rm retrobox-manager.spec
-```
+Tu as une question ou tu veux partager autour du projet ? Rejoins le Discord :  
+💬 [Rejoindre le serveur Discord](https://discord.gg/ArBfCRCA)
 
-## Install
+Si tu apprécies ce projet, tu peux me soutenir ici :  
+❤️ [Faire un don](https://own3d.pro/fr/u/jay_looty/tip)
 
-Install :
-- **python3**
-- **TKINTER** with following commands:
-```bash
-sudo apt update
-sudo apt install python3-tk
-```
-- **requirements** using **pip3**:
-```bash
-pip3 install -r requirements
-```
+---
 
-## Testing locally
+## 🇬🇧 English
 
-To analyze your code, use command:
+Welcome to my project! Here are the steps to install, configure, and use it:
 
-```bash
-find . -iname "*.py" -not -path "./.venv/*" | xargs python3 -m pylint
-```
+1. Download the executable from the latest release.
+2. Fill in the configuration screen that appears on first launch.
+3. Choose the action you want to perform.
+4. Run the action.
 
-## Usage
+Tutorial videos are available on my YouTube channel:  
+🎥 [Visit my channel](https://www.youtube.com/@jaylooty_official)
 
-Use the environment variable RETROBOX_MANAGER_PATH to define a specific path to work.
+Have questions or want to share about the project? Join the Discord server:  
+💬 [Join the Discord server](https://discord.gg/ArBfCRCA)
 
-```bash
-export RETROBOX_MANAGER_PATH=D:\\retrobox\\data
-```
-
-To start the application, type following command:
-
-```bash
-python3 retrobox-manager.py
-```
+If you enjoy this project, you can support me here:  
+❤️ [Donate](https://own3d.pro/fr/u/jay_looty/tip)
