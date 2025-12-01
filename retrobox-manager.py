@@ -9,9 +9,11 @@ from tkinter import ttk
 
 from dialogs.about.about_dialog import AboutDialog
 from dialogs.setup.setup_dialog import SetupDialog
-from libraries.constants.constants import Constants
+from libraries.constants.constants import Action, Constants, FrontEnd
 from libraries.context.context import Context
+from libraries.file.file_helper import FileHelper
 from libraries.ui.ui_helper import UIHelper
+from libraries.xml.xml_helper import XmlHelper
 
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=too-many-branches
@@ -26,6 +28,114 @@ class ApplicationWindow:
 
     def __on_combo_changed(self, event):
         """Called when a combo changed"""
+
+        # If source is action
+        if event.widget == self.combo_action:
+            # Update context from selection
+            Context.set_selected_action(
+                list(Action)[self.combo_action.current()]
+            )
+
+            # Select first front end
+            self.combo_front_end.current(0)
+            self.combo_front_end.event_generate("<<ComboboxSelected>>")
+
+        # If source is front end
+        if event.widget == self.combo_front_end:
+            # Update context from selection
+            Context.set_selected_front_end(
+                list(FrontEnd)[self.combo_front_end.current()]
+            )
+
+            # Update platforms
+            platforms = []
+            if Context.get_selected_action() == Action.EXPORT:
+                if Context.get_selected_front_end() == FrontEnd.BATOCERA:
+                    for platform in FileHelper.list_sub_directories(
+                        folder_path=os.path.join(
+                            Context.get_front_end_path(
+                                front_end=Context.get_selected_front_end()
+                            ),
+                            Constants.BATOCERA_ROMS_PATH
+                        )
+                    ):
+                        if not FileHelper.is_file_exists(os.path.join(
+                            Context.get_front_end_path(
+                                front_end=Context.get_selected_front_end()
+                            ),
+                            Constants.BATOCERA_ROMS_PATH,
+                            platform,
+                            Constants.BATOCERA_GAMELIST_PATH
+                        )):
+                            continue
+
+                        platforms.append(platform)
+                elif Context.get_selected_front_end() == FrontEnd.LAUNCHBOX:
+                    for relative_path in FileHelper.list_relative_paths(
+                        folder_path=os.path.join(
+                            Context.get_front_end_path(
+                                front_end=Context.get_selected_front_end()
+                            ),
+                            Constants.LAUNCHBOX_DATA_PATH,
+                            Constants.LAUNCHBOX_PLATFORMS_PATH
+                        ),
+                        file_name='*',
+                        error_if_not_found=False
+                    ):
+                        if not relative_path.endswith(Constants.XML_EXTENSION):
+                            continue
+                        platforms.append(
+                            relative_path[:-len(Constants.XML_EXTENSION)]
+                        )
+            else:
+                platforms = FileHelper.list_sub_directories(
+                    folder_path=Context.get_games_path()
+                )
+            self.combo_platform.configure(
+                values=platforms
+            )
+
+            # Select first front platform
+            if len(platforms) > 0:
+                self.combo_platform.current(0)
+                self.combo_platform.event_generate("<<ComboboxSelected>>")
+
+        # If source is platform
+        elif event.widget == self.combo_platform:
+            # Update context from selection
+            Context.set_selected_platform(self.combo_platform.get())
+
+            # List games
+            if Context.get_selected_action() == Action.EXPORT:
+                if Context.get_selected_front_end() == FrontEnd.BATOCERA:
+                    gamelist = XmlHelper.list_tag_values(
+                        xml_file_path=os.path.join(
+                            Context.get_front_end_path(
+                                front_end=Context.get_selected_front_end()
+                            ),
+                            Constants.BATOCERA_ROMS_PATH,
+                            Context.get_selected_platform(),
+                            Constants.BATOCERA_GAMELIST_PATH
+                        ),
+                        parent_tag='game',
+                        tag='name'
+                    )
+                    print(gamelist)
+
+                elif Context.get_selected_front_end() == FrontEnd.LAUNCHBOX:
+                    gamelist = XmlHelper.list_tag_values(
+                        xml_file_path=os.path.join(
+                            Context.get_front_end_path(
+                                front_end=Context.get_selected_front_end()
+                            ),
+                            Constants.LAUNCHBOX_DATA_PATH,
+                            Constants.LAUNCHBOX_PLATFORMS_PATH,
+                            f'{Context.get_selected_platform()}{Constants.XML_EXTENSION}'
+                        ),
+                        parent_tag='Game',
+                        tag='Title'
+                    )
+                    print(gamelist)
 
     def __load_setup(self):
         """Load setup"""
@@ -85,6 +195,50 @@ class ApplicationWindow:
             self.__on_combo_changed
         )
 
+        # Create Combobox for front ends
+        self.label_front_end = tk.Label(
+            combo_frame
+        )
+        self.label_front_end.pack(
+            side=tk.LEFT,
+            padx=Constants.UI_PAD_SMALL
+        )
+        self.combo_front_end = ttk.Combobox(
+            combo_frame,
+            width=20
+        )
+        self.combo_front_end.pack(
+            side=tk.LEFT,
+            padx=Constants.UI_PAD_SMALL
+        )
+        self.combo_front_end.config(state="readonly")
+        self.combo_front_end.bind(
+            "<<ComboboxSelected>>",
+            self.__on_combo_changed
+        )
+
+        # Create Combobox for platform
+        self.label_platform = tk.Label(
+            combo_frame
+        )
+        self.label_platform.pack(
+            side=tk.LEFT,
+            padx=Constants.UI_PAD_SMALL
+        )
+        self.combo_platform = ttk.Combobox(
+            combo_frame,
+            width=35
+        )
+        self.combo_platform.pack(
+            side=tk.LEFT,
+            padx=Constants.UI_PAD_SMALL
+        )
+        self.combo_platform.config(state="readonly")
+        self.combo_platform.bind(
+            "<<ComboboxSelected>>",
+            self.__on_combo_changed
+        )
+
         # Create setup/about frame
         setup_about_frame = tk.Frame(top_frame)
         setup_about_frame.pack(
@@ -111,6 +265,28 @@ class ApplicationWindow:
             side=tk.RIGHT,
             padx=Constants.UI_PAD_SMALL
         )
+
+        # Set front ends
+        front_ends = []
+        for front_end in FrontEnd:
+            front_ends.append(front_end.value)
+        self.combo_front_end.configure(
+            values=front_ends
+        )
+        self.combo_front_end.current(0)
+        self.combo_front_end.event_generate("<<ComboboxSelected>>")
+
+        # Set actions
+        actions = []
+        for action in Action:
+            actions.append(Context.get_text(
+                action.value
+            ))
+        self.combo_action.configure(
+            values=actions
+        )
+        self.combo_action.current(0)
+        self.combo_action.event_generate("<<ComboboxSelected>>")
 
     def __create_center_components(self):
         """Create center components"""
@@ -154,9 +330,21 @@ class ApplicationWindow:
         self.label_action.config(
             text=Context.get_text('action')
         )
+        self.label_front_end.config(
+            text=Context.get_text('front_end')
+        )
+        self.label_platform.config(
+            text=Context.get_text('platform')
+        )
+
+        # Fix combobox text
+        self.combo_action.config(
+            values=[Context.get_text(action.value) for action in Action]
+        )
 
         # Set default selection
-        self.combo_action.set('')
+        self.combo_action.current(0)
+        self.combo_action.event_generate("<<ComboboxSelected>>")
 
         # Fix windows's size and position
         UIHelper.center_window(

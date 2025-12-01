@@ -9,7 +9,7 @@ import socket
 import configparser
 import locale
 
-from libraries.constants.constants import Action, Constants
+from libraries.constants.constants import Action, Constants, FrontEnd, Scraper
 
 # pylint: disable=unnecessary-comprehension
 # pylint: disable=too-many-public-methods
@@ -31,6 +31,12 @@ class Context:
     __base_path = None
     __packaged = False
     __selected_action: Action = None
+    __selected_front_end: str = None
+    __selected_platform: str = None
+    __available_front_ends = []
+    __front_ends_paths: dict[FrontEnd, Path] = {}
+    __available_scrapers = []
+    __scrapers_paths: dict[Scraper, Path] = {}
 
     @staticmethod
     def init():
@@ -45,9 +51,9 @@ class Context:
         Context.__hostname = socket.gethostname().lower()
 
         # Define working path
-        pincab_manager_path = os.getenv("PINCAB_MANAGER_PATH")
-        if pincab_manager_path is not None:
-            Context.__working_path = pincab_manager_path
+        retrobox_manager_path = os.getenv("RETROBOX_MANAGER_PATH")
+        if retrobox_manager_path is not None:
+            Context.__working_path = retrobox_manager_path
         else:
             Context.__working_path = os.getcwd()
 
@@ -89,6 +95,12 @@ class Context:
         lang = locale.getlocale()[0]
         Context.__lang_code = 'fr' if lang.startswith('fr') else 'en'
 
+        # Initialize paths
+        for front_end in FrontEnd:
+            Context.__front_ends_paths[front_end] = ''
+        for scraper in Scraper:
+            Context.__scrapers_paths[scraper] = ''
+
         # Initialize monitor
         Context.__monitor = 0
 
@@ -97,6 +109,10 @@ class Context:
 
         # Specify that context is initialized
         Context.__initialized = True
+
+        # Create the games directory if it doesn't exist
+        if not os.path.exists(Context.get_games_path()):
+            os.makedirs(Context.get_games_path())
 
         # Update context from setup
         Context.update_context_from_setup()
@@ -200,15 +216,15 @@ class Context:
         ))
 
     @staticmethod
-    def get_cache_path():
-        """Get cache path"""
+    def get_games_path() -> Path:
+        """Get games path"""
 
         if not Context.__initialized:
             Context.init()
 
         return Path(os.path.join(
             Context.get_working_path(),
-            'cache'
+            'games'
         ))
 
     @staticmethod
@@ -248,6 +264,82 @@ class Context:
         Context.__selected_action = action
 
     @staticmethod
+    def get_selected_front_end() -> str:
+        """Get selected front end"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__selected_front_end
+
+    @staticmethod
+    def set_selected_front_end(front_end: str):
+        """Set selected front end"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        Context.__selected_front_end = front_end
+
+    @staticmethod
+    def get_selected_platform() -> str:
+        """Get selected platform"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__selected_platform
+
+    @staticmethod
+    def set_selected_platform(platform: str):
+        """Set selected platform"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        Context.__selected_platform = platform
+
+    @staticmethod
+    def list_available_front_ends() -> list:
+        """List available front ends"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__available_front_ends
+
+    @staticmethod
+    def get_front_end_path(
+        front_end: FrontEnd
+    ) -> Path:
+        """Get front end path"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__front_ends_paths[front_end]
+
+    @staticmethod
+    def list_available_scrapers() -> list:
+        """List available scrapers"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__available_scrapers
+
+    @staticmethod
+    def get_scraper_path(
+        scraper: Scraper
+    ) -> Path:
+        """Get scraper path"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__scrapers_paths[scraper]
+
+    @staticmethod
     def update_context_from_setup():
         """Update context from setup"""
 
@@ -277,3 +369,47 @@ class Context:
                 Context.__simulated = setup_items[
                     Constants.SETUP_SIMULATED
                 ] == 'True'
+
+            if Constants.SETUP_AVAILABLE_FRONT_ENDS in setup_items:
+                Context.__available_front_ends = []
+                for front_end in FrontEnd:
+                    if f"'{front_end.value}'" in setup_items[
+                        Constants.SETUP_AVAILABLE_FRONT_ENDS
+                    ]:
+                        Context.__available_front_ends.append(front_end.value)
+
+            if Constants.SETUP_FRONT_END_BATOCERA_PATH in setup_items:
+                Context.__front_ends_paths[
+                    FrontEnd.BATOCERA
+                ] = Path(setup_items[
+                    Constants.SETUP_FRONT_END_BATOCERA_PATH
+                ])
+
+            if Constants.SETUP_FRONT_END_LAUNCHBOX_PATH in setup_items:
+                Context.__front_ends_paths[
+                    FrontEnd.LAUNCHBOX
+                ] = Path(setup_items[
+                    Constants.SETUP_FRONT_END_LAUNCHBOX_PATH
+                ])
+
+            if Constants.SETUP_AVAILABLE_SCRAPERS in setup_items:
+                Context.__available_scrapers = []
+                for scraper in Scraper:
+                    if f"'{scraper.value}'" in setup_items[
+                        Constants.SETUP_AVAILABLE_SCRAPERS
+                    ]:
+                        Context.__available_scrapers.append(scraper.value)
+
+            if Constants.SETUP_SCRAPER_EMU_MOVIES_PATH in setup_items:
+                Context.__scrapers_paths[
+                    Scraper.EMU_MOVIES
+                ] = Path(setup_items[
+                    Constants.SETUP_SCRAPER_EMU_MOVIES_PATH
+                ])
+
+            if Constants.SETUP_SCRAPER_SKRAPER_PATH in setup_items:
+                Context.__scrapers_paths[
+                    Scraper.SKRAPER
+                ] = Path(setup_items[
+                    Constants.SETUP_SCRAPER_SKRAPER_PATH
+                ])
