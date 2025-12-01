@@ -1,3 +1,6 @@
+R0.2.0 - 12/01/2025
+- feat(list_games): Add function to list games
+
 R0.1.0 - 12/01/2025
 - feat(setup): Add dialog Setup to configure
 - feat(about): Add dialog About to check update
