@@ -6,7 +6,7 @@ from tkinter import ttk
 
 from libraries.constants.constants import Constants
 from libraries.context.context import Context
-from libraries.verifier.verifier import Verifier
+from libraries.text.text_helper import TextHelper
 
 # pylint: disable=too-many-branches, too-many-locals
 # pylint: disable=too-many-locals
@@ -394,7 +394,7 @@ class UITable:
                     data_row.append(self.__get_selected_value(value))
                 elif isinstance(value, bool):
                     data_row.append(self.__get_checked_value(value))
-                elif Verifier.verify_none_value(value):
+                elif TextHelper.is_none(value):
                     data_row.append(Context.get_text('table_none_checked'))
                 else:
                     data_row.append(value)

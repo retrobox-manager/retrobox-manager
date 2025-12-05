@@ -4,30 +4,23 @@
 import os
 import xml.etree.ElementTree as ET
 
-from libraries.context.context import Context
-from libraries.file.file_helper import FileHelper
-from libraries.logging.logging_helper import LoggingHelper
-
 
 class XmlHelper:
     """Class to help usage of XML"""
 
     @staticmethod
-    def is_tag(
-        xml_file_path: str,
-        tag: str
+    def print_all_tags(
+        xml_file_path: str
     ):
-        """Specify if tag in XML file"""
+        """Show content"""
 
-        # Load XML files
-        xml_content = FileHelper.read_file(
-            file_path=xml_file_path
-        )
-        for line in xml_content.splitlines():
-            if line.strip() == f'<{tag}>':
-                return True
+        # Load tree from XML file
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
 
-        return False
+        # Print all tags
+        for elem in root.iter():
+            print(f"Tag : {elem.tag}  |  Text : {elem.text!r}")
 
     @staticmethod
     def list_tag_values(
@@ -43,117 +36,56 @@ class XmlHelper:
         # Load tree from XML file
         tree = ET.parse(xml_file_path)
         root = tree.getroot()
+
+        # List values for the specified tag
         if parent_tag is None:
             result = [elem.text for elem in root.iter(tag)]
         else:
             for node in root.findall(f'.//{parent_tag}'):
                 result.append(node.find(tag).text)
 
-        # titles = [elem.text for elem in root.iter("Title")]
-        # for t in titles:
-        #     tags_values = t
+        return result
+
+    @staticmethod
+    def retrieve_node(
+        xml_file_path: str,
+        tag: str,
+        field_id: str,
+        field_value: str
+    ) -> ET.Element:
+        """Retrieve a node for the specified tag and field from a XML file"""
+
+        # Initialize result
+        result = None
+
+        # Load tree from XML file
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
+
+        for tag_node in root.findall(tag):
+            field_node = tag_node.find(field_id)
+            if field_node is not None and field_node.text == field_value:
+                result = tag_node
+                break
 
         return result
 
     @staticmethod
-    def extract_tags(
+    def write_node(
         xml_file_path: str,
-        extracted_file_path: str,
-        tags: list
+        node: ET.Element
     ):
-        """Extract tags in a XML file from a XML file"""
+        """Write a node in a XML file"""
 
-        # Load XML file
-        xml_content = FileHelper.read_file(
-            file_path=xml_file_path
-        )
-        export_content = ''
-        for tag in tags:
-            tag_line = False
-            for line in xml_content.splitlines():
-                if line.strip() == f'<{tag}>':
-                    tag_line = True
-                if tag_line:
-                    if len(export_content) > 0:
-                        export_content += '\n'
-                    export_content += line
-                if line.strip() == f'</{tag}>':
-                    tag_line = False
+        # Load tree from node
+        tree = ET.ElementTree(node)
 
-        if len(export_content) == 0:
-            return
+        # Make parent directories
+        os.makedirs(os.path.dirname(xml_file_path), exist_ok=True)
 
-        if Context.is_simulated():
-            LoggingHelper.log_info(
-                message=Context.get_text(
-                    'extract_tags_simulation',
-                    file=str(extracted_file_path)
-                )
-            )
-            return
-
-        LoggingHelper.log_info(
-            message=Context.get_text(
-                'extract_tags_in_progress',
-                file=str(extracted_file_path)
-            )
-        )
-        os.makedirs(os.path.dirname(extracted_file_path), exist_ok=True)
-        FileHelper.write_file(
-            file_path=extracted_file_path,
-            content=export_content
-        )
-
-    @staticmethod
-    def delete_tags(
-        xml_file_path: str,
-        tags: list
-    ):
-        """Delete tags from XML file"""
-
-        # Load XML files
-        xml_content = FileHelper.read_file(
-            file_path=xml_file_path
-        )
-        new_content = ''
-        tag_line = False
-        for line in xml_content.splitlines():
-            for tag in tags:
-                if line.strip() == f'<{tag}>':
-                    tag_line = True
-            if not tag_line:
-                new_content += line + '\n'
-            for tag in tags:
-                if line.strip() == f'</{tag}>':
-                    tag_line = False
-
-        FileHelper.write_file(
-            file_path=xml_file_path,
-            content=new_content
-        )
-
-    @staticmethod
-    def import_tags(
-        xml_file_path: str,
-        extracted_file_path: str,
-        parent_tag: str
-    ):
-        """Import tags in a XML file from a XML file"""
-
-        # Load XML files
-        xml_content = FileHelper.read_file(
-            file_path=xml_file_path
-        )
-        tags_content = FileHelper.read_file(
-            file_path=extracted_file_path
-        )
-        new_content = ''
-        for line in xml_content.splitlines():
-            if line.strip() == f'</{parent_tag}>':
-                new_content += tags_content + '\n'
-            new_content += line + '\n'
-
-        FileHelper.write_file(
-            file_path=xml_file_path,
-            content=new_content
+        # Write tree in XML file
+        tree.write(
+            xml_file_path,
+            encoding="utf-8",
+            xml_declaration=True
         )

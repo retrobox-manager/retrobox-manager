@@ -41,7 +41,7 @@ find . -iname "*.py" -not -path "./.venv/*" | xargs python3 -m pylint
 Use the environment variable RETROBOX_MANAGER_PATH to define a specific path to work.
 
 ```bash
-export RETROBOX_MANAGER_PATH=D:\\retrobox\\test
+export RETROBOX_MANAGER_PATH='E:\\_Retro Box\\retrobox-manager'
 ```
 
 To start the application, type following command:

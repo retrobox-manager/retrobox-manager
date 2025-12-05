@@ -33,10 +33,12 @@ class Context:
     __selected_action: Action = None
     __selected_front_end: str = None
     __selected_platform: str = None
+    __data_platform: str = None
     __available_front_ends = []
-    __front_ends_paths: dict[FrontEnd, Path] = {}
     __available_scrapers = []
+    __front_ends_paths: dict[FrontEnd, Path] = {}
     __scrapers_paths: dict[Scraper, Path] = {}
+    __selected_rows = []
 
     @staticmethod
     def init():
@@ -264,7 +266,7 @@ class Context:
         Context.__selected_action = action
 
     @staticmethod
-    def get_selected_front_end() -> str:
+    def get_selected_front_end() -> FrontEnd:
         """Get selected front end"""
 
         if not Context.__initialized:
@@ -273,7 +275,7 @@ class Context:
         return Context.__selected_front_end
 
     @staticmethod
-    def set_selected_front_end(front_end: str):
+    def set_selected_front_end(front_end: FrontEnd):
         """Set selected front end"""
 
         if not Context.__initialized:
@@ -298,6 +300,24 @@ class Context:
             Context.init()
 
         Context.__selected_platform = platform
+
+    @staticmethod
+    def get_data_platform() -> str:
+        """Get data platform"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__data_platform
+
+    @staticmethod
+    def set_data_platform(platform: str):
+        """Set data platform"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        Context.__data_platform = platform
 
     @staticmethod
     def list_available_front_ends() -> list:
@@ -338,6 +358,24 @@ class Context:
             Context.init()
 
         return Context.__scrapers_paths[scraper]
+
+    @staticmethod
+    def get_selected_rows() -> list:
+        """Get selected rows"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__selected_rows
+
+    @staticmethod
+    def set_selected_rows(rows: list):
+        """Set selected rows"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        Context.__selected_rows = rows
 
     @staticmethod
     def update_context_from_setup():

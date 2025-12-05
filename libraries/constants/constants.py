@@ -34,12 +34,6 @@ class Constants:
     # Constants for paths
     RESOURCES_PATH = 'resources'
     GAMES_PATH = 'games'
-    BATOCERA_ROMS_PATH = 'roms'
-    BATOCERA_GAMELIST_PATH = 'gamelist.xml'
-    LAUNCHBOX_DATA_PATH = 'Data'
-    LAUNCHBOX_IMAGES_PATH = 'Images'
-    LAUNCHBOX_VIDEOS_PATH = 'Videos'
-    LAUNCHBOX_PLATFORMS_PATH = 'Platforms'
 
     # Constants for extensions
     XML_EXTENSION = '.xml'
@@ -54,6 +48,10 @@ class Constants:
     # Constants for UI
     UI_PAD_SMALL = 5
     UI_PAD_BIG = 10
+    UI_TABLE_KEY_COL_SELECTION = 'column_title_selection'
+    UI_TABLE_KEY_COL_ID = 'column_title_id'
+    UI_TABLE_KEY_COL_NAME = 'column_title_name'
+    UI_TABLE_KEY_COLOR = 'color'
 
     # Constants for setup
     SETUP_LANG_CODE = 'lang_code'
@@ -71,3 +69,10 @@ class Constants:
     ITEM_COLOR_GREEN = 'green'
     ITEM_COLOR_ORANGE = 'orange'
     ITEM_COLOR_RED = 'red'
+
+    # Constants for CSV
+    CSV_YES_VALUE = 'YES'
+    CSV_NO_VALUE = 'NO'
+    CSV_COL_NAME = 'NAME'
+    CSV_COL_AVAILABLE = 'AVAILABLE'
+    CSV_COL_ID = 'ID'

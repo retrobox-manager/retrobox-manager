@@ -6,12 +6,9 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 
-from executor.bdd_tables.bdd_tables_executor import BDDTablesExecutor
-from executor.playlists.playlists_executor import PlaylistsExecutor
-from executor.tables.tables_executor import TablesExecutor
-from executor.configs.configs_executor import ConfigsExecutor
-from libraries.constants.constants import Category, Constants
+from libraries.constants.constants import Constants
 from libraries.context.context import Context
+from libraries.frontend.front_end_factory import FrontEndFactory
 from libraries.logging.logging_helper import LoggingHelper
 from libraries.ui.ui_helper import UIHelper
 
@@ -112,35 +109,15 @@ class ExecuteDialog:
             log_ui=execution_area
         )
 
-        # Initialize executor
-        match(Context.get_selected_category()):
-            case Category.TABLES:
-                self.__executor = TablesExecutor(
-                    progress_bar=progress_bar,
-                    progress_label=self.progress_label,
-                    button_close=button_close
-                )
-
-            case Category.PLAYLISTS:
-                self.__executor = PlaylistsExecutor(
-                    progress_bar=progress_bar,
-                    progress_label=self.progress_label,
-                    button_close=button_close
-                )
-
-            case Category.BDD_TABLES:
-                self.__executor = BDDTablesExecutor(
-                    progress_bar=progress_bar,
-                    progress_label=self.progress_label,
-                    button_close=button_close
-                )
-
-            case Category.CONFIGS:
-                self.__executor = ConfigsExecutor(
-                    progress_bar=progress_bar,
-                    progress_label=self.progress_label,
-                    button_close=button_close
-                )
+        # Initialize executor and UI Components
+        self.__executor = FrontEndFactory.create(
+            front_end=Context.get_selected_front_end()
+        )
+        self.__executor.set_ui_components(
+            progress_bar=progress_bar,
+            progress_label=self.progress_label,
+            button_close=button_close
+        )
 
         # Execute in a thread
         self.execution_thread = threading.Thread(
@@ -176,9 +153,7 @@ class ExecuteDialog:
         )
 
         # Call back
-        self.__callback(
-            only_ids=self.__executor.get_ids_done()
-        )
+        self.__callback()
 
         # Close the dialog
         UIHelper.close_dialog(self.dialog)
@@ -196,9 +171,7 @@ class ExecuteDialog:
             UIHelper.close_dialog(self.dialog)
 
             # Call back
-            self.__callback(
-                only_ids=self.__executor.get_ids_done()
-            )
+            self.__callback()
 
         elif messagebox.askokcancel(
             Context.get_text('confirmation'),

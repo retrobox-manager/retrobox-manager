@@ -1,30 +1,45 @@
-
 # pylint: disable=invalid-name
 #!/usr/bin/python3
 """Application to manage my Retrobox"""
 
 import os
+import re
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
+from tkinter import simpledialog
 
 from dialogs.about.about_dialog import AboutDialog
+from dialogs.execute.execute_dialog import ExecuteDialog
+from dialogs.selection.selection_dialog import SelectionDialog
 from dialogs.setup.setup_dialog import SetupDialog
 from libraries.constants.constants import Action, Constants, FrontEnd
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
+from libraries.frontend.front_end_factory import FrontEndFactory
+from libraries.text.text_helper import TextHelper
 from libraries.ui.ui_helper import UIHelper
+from libraries.ui.ui_table import UITable
 from libraries.xml.xml_helper import XmlHelper
 
 # pylint: disable=attribute-defined-outside-init
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-statements
 # pylint: disable=too-many-instance-attributes
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-lines
 
 
 class ApplicationWindow:
     """Application to manage Retrobox"""
+
+    def __on_selected_rows_changed(self):
+        """Called when selected rows changed"""
+
+        # Retrieve selected rows
+        selected_rows = self.table.get_selected_rows()
+
+        # Update execute button state
+        if len(selected_rows) > 0:
+            self.button_execute.config(state=tk.NORMAL)
+        else:
+            self.button_execute.config(state=tk.DISABLED)
 
     def __on_combo_changed(self, event):
         """Called when a combo changed"""
@@ -41,7 +56,7 @@ class ApplicationWindow:
             self.combo_front_end.event_generate("<<ComboboxSelected>>")
 
         # If source is front end
-        if event.widget == self.combo_front_end:
+        elif event.widget == self.combo_front_end:
             # Update context from selection
             Context.set_selected_front_end(
                 list(FrontEnd)[self.combo_front_end.current()]
@@ -50,43 +65,9 @@ class ApplicationWindow:
             # Update platforms
             platforms = []
             if Context.get_selected_action() == Action.EXPORT:
-                if Context.get_selected_front_end() == FrontEnd.BATOCERA:
-                    for platform in FileHelper.list_sub_directories(
-                        folder_path=os.path.join(
-                            Context.get_front_end_path(
-                                front_end=Context.get_selected_front_end()
-                            ),
-                            Constants.BATOCERA_ROMS_PATH
-                        )
-                    ):
-                        if not FileHelper.is_file_exists(os.path.join(
-                            Context.get_front_end_path(
-                                front_end=Context.get_selected_front_end()
-                            ),
-                            Constants.BATOCERA_ROMS_PATH,
-                            platform,
-                            Constants.BATOCERA_GAMELIST_PATH
-                        )):
-                            continue
-
-                        platforms.append(platform)
-                elif Context.get_selected_front_end() == FrontEnd.LAUNCHBOX:
-                    for relative_path in FileHelper.list_relative_paths(
-                        folder_path=os.path.join(
-                            Context.get_front_end_path(
-                                front_end=Context.get_selected_front_end()
-                            ),
-                            Constants.LAUNCHBOX_DATA_PATH,
-                            Constants.LAUNCHBOX_PLATFORMS_PATH
-                        ),
-                        file_name='*',
-                        error_if_not_found=False
-                    ):
-                        if not relative_path.endswith(Constants.XML_EXTENSION):
-                            continue
-                        platforms.append(
-                            relative_path[:-len(Constants.XML_EXTENSION)]
-                        )
+                platforms = FrontEndFactory.create(
+                    front_end=Context.get_selected_front_end()
+                ).list_platforms()
             else:
                 platforms = FileHelper.list_sub_directories(
                     folder_path=Context.get_games_path()
@@ -105,37 +86,49 @@ class ApplicationWindow:
             # Update context from selection
             Context.set_selected_platform(self.combo_platform.get())
 
-            # List games
-            if Context.get_selected_action() == Action.EXPORT:
-                if Context.get_selected_front_end() == FrontEnd.BATOCERA:
-                    gamelist = XmlHelper.list_tag_values(
-                        xml_file_path=os.path.join(
-                            Context.get_front_end_path(
-                                front_end=Context.get_selected_front_end()
-                            ),
-                            Constants.BATOCERA_ROMS_PATH,
-                            Context.get_selected_platform(),
-                            Constants.BATOCERA_GAMELIST_PATH
-                        ),
-                        parent_tag='game',
-                        tag='name'
-                    )
-                    print(gamelist)
+            # Update UI
+            self.__update_ui()
 
-                elif Context.get_selected_front_end() == FrontEnd.LAUNCHBOX:
-                    gamelist = XmlHelper.list_tag_values(
-                        xml_file_path=os.path.join(
-                            Context.get_front_end_path(
-                                front_end=Context.get_selected_front_end()
-                            ),
-                            Constants.LAUNCHBOX_DATA_PATH,
-                            Constants.LAUNCHBOX_PLATFORMS_PATH,
-                            f'{Context.get_selected_platform()}{Constants.XML_EXTENSION}'
-                        ),
-                        parent_tag='Game',
-                        tag='Title'
+    def __update_ui(self):
+        """Update UI depending on choices made in combos"""
+
+        # Create rows for table
+        table_rows = []
+        match(Context.get_selected_action()):
+            case Action.EXPORT:
+                games = FrontEndFactory.create(
+                    front_end=Context.get_selected_front_end()
+                ).list_games(
+                    platform=Context.get_selected_platform()
+                )
+
+                for game in games:
+                    # Build row
+                    row = {}
+                    row[Constants.UI_TABLE_KEY_COL_SELECTION] = False
+                    row[Constants.UI_TABLE_KEY_COL_ID] = TextHelper.sanitize(
+                        game
                     )
-                    print(gamelist)
+                    row[Constants.UI_TABLE_KEY_COL_NAME] = game
+
+                    # Retrieve color
+                    row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
+
+                    # Append row
+                    table_rows.append(row)
+
+        # Sort rows depending on UI_TABLE_KEY_COLOR (desc) and Constants.UI_TABLE_KEY_COL_NAME (asc)
+        sorted_rows = sorted(
+            table_rows,
+            key=lambda x: (-ord(
+                x[Constants.UI_TABLE_KEY_COLOR][0]),
+                x[Constants.UI_TABLE_KEY_COL_NAME]
+            )
+        )
+
+        self.__create_table(
+            rows=sorted_rows
+        )
 
     def __load_setup(self):
         """Load setup"""
@@ -152,6 +145,66 @@ class ApplicationWindow:
         # Load dialog for about
         AboutDialog(
             self.__window
+        )
+
+    def __execute(self):
+        """Execute"""
+
+        # Update selected rows in context
+        Context.set_selected_rows(
+            self.table.get_selected_rows()
+        )
+
+        # Update data platform in context depending on action
+        if Context.get_selected_action() != Action.EXPORT:
+            Context.set_data_platform(Context.get_selected_platform())
+        else:
+            platforms = XmlHelper.list_tag_values(
+                xml_file_path=os.path.join(
+                    Context.get_games_path(),
+                    'platforms.xml'
+                ),
+                tag=Context.get_selected_front_end().value.lower(),
+                parent_tag='platform'
+            )
+            if Context.get_selected_platform() not in platforms:
+                new_platform = messagebox.askyesno(
+                    title=Context.get_text('question'),
+                    message=Context.get_text('question_new_platform'),
+                    parent=self.__window.winfo_toplevel()
+                )
+
+                if new_platform:
+                    # Ask an entry for the new platform
+                    while True:
+                        new_platform = simpledialog.askstring(
+                            Context.get_text('confirmation'),
+                            Context.get_text(
+                                'confirm_create_platform'
+                            ),
+                            parent=self.__window.winfo_toplevel()
+                        )
+                        if new_platform is None:
+                            return
+                        if re.fullmatch(r"[a-zA-Z0-9.]+", new_platform):
+                            break
+                    print(new_platform)
+                else:
+                    # Ask a selection for the existing platform
+                    existing_platform = SelectionDialog(
+                        title=Context.get_text('selection'),
+                        message=Context.get_text('selection_platform'),
+                        values=platforms,
+                        parent=self.__window.winfo_toplevel()
+                    ).result
+                    print(existing_platform)
+
+                Context.set_data_platform('To complete')
+
+        # Update context
+        ExecuteDialog(
+            self.__window,
+            callback=self.__update_ui
         )
 
     def __create_top_components(self):
@@ -266,28 +319,6 @@ class ApplicationWindow:
             padx=Constants.UI_PAD_SMALL
         )
 
-        # Set front ends
-        front_ends = []
-        for front_end in FrontEnd:
-            front_ends.append(front_end.value)
-        self.combo_front_end.configure(
-            values=front_ends
-        )
-        self.combo_front_end.current(0)
-        self.combo_front_end.event_generate("<<ComboboxSelected>>")
-
-        # Set actions
-        actions = []
-        for action in Action:
-            actions.append(Context.get_text(
-                action.value
-            ))
-        self.combo_action.configure(
-            values=actions
-        )
-        self.combo_action.current(0)
-        self.combo_action.event_generate("<<ComboboxSelected>>")
-
     def __create_center_components(self):
         """Create center components"""
         self.center_frame = tk.Frame(self.__window)
@@ -295,6 +326,39 @@ class ApplicationWindow:
             side=tk.TOP,
             fill=tk.BOTH,
             expand=True,
+        )
+
+        self.__create_table_frame()
+
+    def __create_table(
+        self,
+        rows: list
+    ):
+        """Create the table"""
+
+        # Clear the frame
+        UIHelper.clear_frame(self.table_frame)
+
+        # Create the table
+        self.table = UITable(
+            parent=self.table_frame,
+            on_selected_rows_change=self.__on_selected_rows_changed,
+            rows=rows
+        )
+
+    def __create_table_frame(self):
+        """Create frame for table"""
+
+        # Create frame
+        self.table_frame = tk.LabelFrame(
+            self.center_frame,
+            text=''
+        )
+        self.table_frame.pack(
+            side=tk.TOP,
+            fill=tk.BOTH,
+            expand=True,
+            padx=Constants.UI_PAD_BIG
         )
 
     def __create_bottom_components(self):
@@ -306,6 +370,16 @@ class ApplicationWindow:
             side=tk.BOTTOM,
             fill=tk.X,
             pady=Constants.UI_PAD_BIG
+        )
+
+        # Create button to execute
+        self.button_execute = tk.Button(
+            bottom_frame,
+            command=self.__execute
+        )
+        self.button_execute.config(state=tk.DISABLED)
+        self.button_execute.pack(
+            side=tk.BOTTOM
         )
 
     def __update_components_from_context(self):
@@ -325,6 +399,9 @@ class ApplicationWindow:
         self.button_about.config(
             text=Context.get_text('about')
         )
+        self.button_execute.config(
+            text=Context.get_text('execute')
+        )
 
         # Fix labels text
         self.label_action.config(
@@ -337,12 +414,35 @@ class ApplicationWindow:
             text=Context.get_text('platform')
         )
 
+        # Fix tables text
+        self.table_frame.config(
+            text=Context.get_text('games')
+        )
+
         # Fix combobox text
         self.combo_action.config(
             values=[Context.get_text(action.value) for action in Action]
         )
 
-        # Set default selection
+        # Set front ends
+        front_ends = []
+        for front_end in FrontEnd:
+            front_ends.append(front_end.value)
+        self.combo_front_end.configure(
+            values=front_ends
+        )
+        self.combo_front_end.current(0)
+        self.combo_front_end.event_generate("<<ComboboxSelected>>")
+
+        # Set actions
+        actions = []
+        for action in Action:
+            actions.append(Context.get_text(
+                action.value
+            ))
+        self.combo_action.configure(
+            values=actions
+        )
         self.combo_action.current(0)
         self.combo_action.event_generate("<<ComboboxSelected>>")
 
