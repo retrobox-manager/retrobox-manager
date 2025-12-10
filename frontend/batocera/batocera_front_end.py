@@ -5,8 +5,8 @@ import os
 from libraries.constants.constants import FrontEnd
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
-from libraries.frontend.abstract_frontend import AbstractFrontEnd
 from libraries.xml.xml_helper import XmlHelper
+from frontend.abstract_frontend import AbstractFrontEnd
 
 
 class BatoceraFrontEnd(AbstractFrontEnd):
@@ -14,18 +14,17 @@ class BatoceraFrontEnd(AbstractFrontEnd):
 
     __PATH_ROMS = 'roms'
     __PATH_GAMELIST = 'gamelist.xml'
-    __PATH_BATOCERA = 'batocera.xml'
 
     __TAG_GAME = 'game'
     __TAG_NAME = 'name'
 
+    __FILE_PREFIX = './'
+
     def __init__(self):
         """Initialize FrontEnd"""
 
-        super().__init__()
-
         self.__folder_path = Context.get_front_end_path(
-            front_end=self.get_id()
+            front_end=self.get_enum()
         )
 
     def __retrieve_game_list_xml_path(
@@ -41,10 +40,20 @@ class BatoceraFrontEnd(AbstractFrontEnd):
             self.__PATH_GAMELIST
         )
 
-    def get_id(self) -> FrontEnd:
-        """Get id"""
+    def get_enum(self) -> FrontEnd:
+        """Get enum"""
 
         return FrontEnd.BATOCERA
+
+    def get_id(self) -> str:
+        """Get id"""
+
+        return self.get_enum().value.lower()
+
+    def get_rom_key(self) -> str:
+        """Get rom's key"""
+
+        return 'path'
 
     def list_platforms(self) -> list:
         """List platforms"""
@@ -82,39 +91,52 @@ class BatoceraFrontEnd(AbstractFrontEnd):
 
         return games
 
-    def do_export(
-        self,
-        game_id: str,
-        game_name: str
-    ):
-        """Do export for a plateform and a game"""
+    def retrieve_game_files(self, platform: str, game: str) -> dict:
+        """Retrieve game files"""
 
-        if not FileHelper.is_file_exists(
-            os.path.join(
-                self.__retrieve_game_list_xml_path(
-                    platform=Context.get_selected_platform()
-                )
-            )
-        ):
-            raise Exception(f'Cannot find {self.__PATH_GAMELIST}')
+        # Initialize result
+        result = {}
 
-        game_xml_node = XmlHelper.retrieve_node(
-            xml_file_path=os.path.join(
-                self.__retrieve_game_list_xml_path(
-                    platform=Context.get_selected_platform()
-                )
+        # Get game's data
+        game_data = XmlHelper.get_tag_data(
+            xml_file_path=self.__retrieve_game_list_xml_path(
+                platform=platform
             ),
             tag=self.__TAG_GAME,
-            field_id=self.__TAG_NAME,
-            field_value=game_name
+            criteria={
+                self.__TAG_NAME: game
+            }
         )
 
-        XmlHelper.write_node(
-            xml_file_path=os.path.join(
-                Context.get_games_path(),
-                Context.get_selected_platform(),
-                game_id,
-                self.__PATH_BATOCERA
+        for key, value in game_data.items():
+            if value.startswith(self.__FILE_PREFIX):
+                result[key] = os.path.join(
+                    self.__folder_path,
+                    self.__PATH_ROMS,
+                    platform,
+                    value[2:].replace('/', '\\')
+                )
+
+        return result
+
+    def retrieve_game_info(self, platform: str, game: str) -> str:
+        """Retrieve game info"""
+
+        # Initialize result
+        result = ''
+
+        game_data = XmlHelper.get_tag_content(
+            xml_file_path=self.__retrieve_game_list_xml_path(
+                platform=platform
             ),
-            node=game_xml_node
+            tag=self.__TAG_GAME,
+            criteria={
+                self.__TAG_NAME: game
+            }
         )
+
+        result = '\n'.join(
+            line for line in game_data.splitlines() if self.__FILE_PREFIX not in line
+        )
+
+        return result

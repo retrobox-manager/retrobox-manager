@@ -6,9 +6,9 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 
+from executor.executor_factory import ExecutorFactory
 from libraries.constants.constants import Constants
 from libraries.context.context import Context
-from libraries.frontend.front_end_factory import FrontEndFactory
 from libraries.logging.logging_helper import LoggingHelper
 from libraries.ui.ui_helper import UIHelper
 
@@ -27,6 +27,15 @@ class ExecuteDialog:
         """Initialize dialog"""
 
         self.__callback = callback
+
+        # Build executor
+        self.__executor = ExecutorFactory.create()
+
+        # No execution is no confirmation
+        if not self.__executor.confirm_execution(
+            parent=parent
+        ):
+            return
 
         # Create dialog
         self.dialog = tk.Toplevel(parent)
@@ -109,10 +118,7 @@ class ExecuteDialog:
             log_ui=execution_area
         )
 
-        # Initialize executor and UI Components
-        self.__executor = FrontEndFactory.create(
-            front_end=Context.get_selected_front_end()
-        )
+        # Set UI Components for executor
         self.__executor.set_ui_components(
             progress_bar=progress_bar,
             progress_label=self.progress_label,

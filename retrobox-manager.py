@@ -3,24 +3,19 @@
 """Application to manage my Retrobox"""
 
 import os
-import re
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
-from tkinter import simpledialog
 
 from dialogs.about.about_dialog import AboutDialog
 from dialogs.execute.execute_dialog import ExecuteDialog
-from dialogs.selection.selection_dialog import SelectionDialog
 from dialogs.setup.setup_dialog import SetupDialog
-from libraries.constants.constants import Action, Constants, FrontEnd
+from frontend.front_end_factory import FrontEndFactory
+from libraries.constants.constants import Action, Category, Constants, FrontEnd
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
-from libraries.frontend.front_end_factory import FrontEndFactory
 from libraries.text.text_helper import TextHelper
 from libraries.ui.ui_helper import UIHelper
 from libraries.ui.ui_table import UITable
-from libraries.xml.xml_helper import XmlHelper
 
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=too-many-instance-attributes
@@ -44,8 +39,82 @@ class ApplicationWindow:
     def __on_combo_changed(self, event):
         """Called when a combo changed"""
 
+        # If source is category
+        if event.widget == self.combo_category:
+            # Update context from selection
+            Context.set_selected_category(
+                list(Category)[self.combo_category.current()]
+            )
+
+            # Set title for table
+            self.table_frame.config(
+                text=Context.get_text(
+                    Context.get_selected_category().value
+                )
+            )
+
+            # Show/Hide combos depending on selected category
+            if Context.get_selected_category() == Category.GAMES:
+                self.label_front_end.pack(
+                    side=tk.LEFT,
+                    padx=Constants.UI_PAD_SMALL
+                )
+                self.combo_front_end.pack(
+                    side=tk.LEFT,
+                    padx=Constants.UI_PAD_SMALL
+                )
+                self.label_platform.pack(
+                    side=tk.LEFT,
+                    padx=Constants.UI_PAD_SMALL
+                )
+                self.combo_platform.pack(
+                    side=tk.LEFT,
+                    padx=Constants.UI_PAD_SMALL
+                )
+                self.combo_front_end.current(0)
+            else:
+                self.label_front_end.pack_forget()
+                self.combo_front_end.pack_forget()
+                self.label_platform.pack_forget()
+                self.combo_platform.pack_forget()
+
+            # Update actions depending on selected category
+            available_actions = []
+            match(Context.get_selected_category()):
+                case Category.GAMES:
+                    available_actions = [
+                        Action.EXPORT,
+                        Action.INSTALL,
+                        Action.UNINSTALL
+                    ]
+
+                case Category.CONFIGS:
+                    available_actions = [
+                        Action.EDIT,
+                        Action.INSTALL,
+                        Action.UNINSTALL
+                    ]
+
+            category_actions = []
+            for action in Action:
+                if action not in available_actions:
+                    continue
+                category_actions.append(Context.get_text(
+                    action.value,
+                    category=Context.get_text(
+                        Context.get_selected_category().value
+                    )
+                ))
+            self.combo_action.configure(
+                values=category_actions
+            )
+
+            # Select first action
+            self.combo_action.current(0)
+            self.combo_action.event_generate("<<ComboboxSelected>>")
+
         # If source is action
-        if event.widget == self.combo_action:
+        elif event.widget == self.combo_action:
             # Update context from selection
             Context.set_selected_action(
                 list(Action)[self.combo_action.current()]
@@ -155,52 +224,6 @@ class ApplicationWindow:
             self.table.get_selected_rows()
         )
 
-        # Update data platform in context depending on action
-        if Context.get_selected_action() != Action.EXPORT:
-            Context.set_data_platform(Context.get_selected_platform())
-        else:
-            platforms = XmlHelper.list_tag_values(
-                xml_file_path=os.path.join(
-                    Context.get_games_path(),
-                    'platforms.xml'
-                ),
-                tag=Context.get_selected_front_end().value.lower(),
-                parent_tag='platform'
-            )
-            if Context.get_selected_platform() not in platforms:
-                new_platform = messagebox.askyesno(
-                    title=Context.get_text('question'),
-                    message=Context.get_text('question_new_platform'),
-                    parent=self.__window.winfo_toplevel()
-                )
-
-                if new_platform:
-                    # Ask an entry for the new platform
-                    while True:
-                        new_platform = simpledialog.askstring(
-                            Context.get_text('confirmation'),
-                            Context.get_text(
-                                'confirm_create_platform'
-                            ),
-                            parent=self.__window.winfo_toplevel()
-                        )
-                        if new_platform is None:
-                            return
-                        if re.fullmatch(r"[a-zA-Z0-9.]+", new_platform):
-                            break
-                    print(new_platform)
-                else:
-                    # Ask a selection for the existing platform
-                    existing_platform = SelectionDialog(
-                        title=Context.get_text('selection'),
-                        message=Context.get_text('selection_platform'),
-                        values=platforms,
-                        parent=self.__window.winfo_toplevel()
-                    ).result
-                    print(existing_platform)
-
-                Context.set_data_platform('To complete')
-
         # Update context
         ExecuteDialog(
             self.__window,
@@ -226,6 +249,28 @@ class ApplicationWindow:
             expand=True
         )
 
+        # Create Combobox for category
+        self.label_category = tk.Label(
+            combo_frame
+        )
+        self.label_category.pack(
+            side=tk.LEFT,
+            padx=Constants.UI_PAD_SMALL
+        )
+        self.combo_category = ttk.Combobox(
+            combo_frame,
+            width=7
+        )
+        self.combo_category.config(state="readonly")
+        self.combo_category.pack(
+            side=tk.LEFT,
+            padx=Constants.UI_PAD_SMALL
+        )
+        self.combo_category.bind(
+            "<<ComboboxSelected>>",
+            self.__on_combo_changed
+        )
+
         # Create Combobox for action
         self.label_action = tk.Label(
             combo_frame
@@ -236,7 +281,7 @@ class ApplicationWindow:
         )
         self.combo_action = ttk.Combobox(
             combo_frame,
-            width=35
+            width=25
         )
         self.combo_action.pack(
             side=tk.LEFT,
@@ -258,7 +303,7 @@ class ApplicationWindow:
         )
         self.combo_front_end = ttk.Combobox(
             combo_frame,
-            width=20
+            width=10
         )
         self.combo_front_end.pack(
             side=tk.LEFT,
@@ -280,7 +325,7 @@ class ApplicationWindow:
         )
         self.combo_platform = ttk.Combobox(
             combo_frame,
-            width=35
+            width=25
         )
         self.combo_platform.pack(
             side=tk.LEFT,
@@ -404,6 +449,9 @@ class ApplicationWindow:
         )
 
         # Fix labels text
+        self.label_category.config(
+            text=Context.get_text('category')
+        )
         self.label_action.config(
             text=Context.get_text('action')
         )
@@ -414,37 +462,26 @@ class ApplicationWindow:
             text=Context.get_text('platform')
         )
 
-        # Fix tables text
-        self.table_frame.config(
-            text=Context.get_text('games')
+        # Fix values for combobox category
+        self.combo_category.config(
+            values=[Context.get_text(category.value) for category in Category]
         )
 
-        # Fix combobox text
-        self.combo_action.config(
-            values=[Context.get_text(action.value) for action in Action]
-        )
-
-        # Set front ends
+        # Fix values for combobox front ends
         front_ends = []
         for front_end in FrontEnd:
             front_ends.append(front_end.value)
         self.combo_front_end.configure(
             values=front_ends
         )
-        self.combo_front_end.current(0)
-        self.combo_front_end.event_generate("<<ComboboxSelected>>")
 
-        # Set actions
-        actions = []
-        for action in Action:
-            actions.append(Context.get_text(
-                action.value
-            ))
-        self.combo_action.configure(
-            values=actions
-        )
-        self.combo_action.current(0)
-        self.combo_action.event_generate("<<ComboboxSelected>>")
+        # Set default selection
+        self.combo_category.set('')
+        self.combo_action.set('')
+        self.combo_front_end.set('')
+        self.combo_platform.set('')
+        self.combo_category.current(0)
+        self.combo_category.event_generate("<<ComboboxSelected>>")
 
         # Fix windows's size and position
         UIHelper.center_window(

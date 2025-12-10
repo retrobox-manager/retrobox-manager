@@ -1,26 +1,31 @@
 #!/usr/bin/python3
-"""Scraper for SKRAPER"""
+"""Scraper for EMU_MOVIES"""
 
 from libraries.constants.constants import Scraper
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
-from libraries.scraper.abstract_scraper import AbstractScraper
+from scraper.abstract_scraper import AbstractScraper
 
 
-class SkraperScraper(AbstractScraper):
-    """Scraper for SKRAPER"""
+class EmuMoviesScraper(AbstractScraper):
+    """Scraper for EMU_MOVIES"""
 
     def __init__(self):
         """Initialize Scraper"""
 
         self.__folder_path = Context.get_scraper_path(
-            scraper=self.get_id()
+            scraper=self.get_enum()
         )
 
-    def get_id(self) -> Scraper:
+    def get_enum(self) -> Scraper:
+        """Get enum"""
+
+        return Scraper.EMU_MOVIES
+
+    def get_id(self) -> str:
         """Get id"""
 
-        return Scraper.SKRAPER
+        return self.get_enum().value.lower()
 
     def list_platforms(self) -> list:
         """List platforms"""

@@ -4,6 +4,13 @@
 from enum import Enum
 
 
+class Category(Enum):
+    """Category"""
+
+    GAMES = 'category_games'
+    CONFIGS = 'category_configs'
+
+
 class Action(Enum):
     """Action"""
 
@@ -18,7 +25,7 @@ class FrontEnd(Enum):
     """FrontEnd"""
 
     BATOCERA = 'Batocera'
-    LAUNCHBOX = 'LaunchBox / BigBox'
+    LAUNCHBOX = 'LaunchBox'
 
 
 class Scraper(Enum):
@@ -69,10 +76,3 @@ class Constants:
     ITEM_COLOR_GREEN = 'green'
     ITEM_COLOR_ORANGE = 'orange'
     ITEM_COLOR_RED = 'red'
-
-    # Constants for CSV
-    CSV_YES_VALUE = 'YES'
-    CSV_NO_VALUE = 'NO'
-    CSV_COL_NAME = 'NAME'
-    CSV_COL_AVAILABLE = 'AVAILABLE'
-    CSV_COL_ID = 'ID'

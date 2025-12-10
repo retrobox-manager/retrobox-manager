@@ -1,0 +1,25 @@
+
+	<game id="21896">
+		<path>./DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).iso</path>
+		<name>Dragon Ball Z : Budokai Tenkaichi 2</name>
+		<desc>Dragon Ball Z : Budokai Tenkaichi 2 est un jeu de combat sur Playstation 2. Le titre reprend l'univers du manga Dragon Ball Z, avec au total plus de 129 personnages jouables. Le mode scénario colle à l'histoire de la série, avec tous les événements clés qui en ont fait le succès. D'autre part, on peut également choisir sa destination en contrôlant son personnage dans les airs.</desc>
+		<image>./media/images/DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).png</image>
+		<video>./media/videos/DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).mp4</video>
+		<marquee>./media/wheel/DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).png</marquee>
+		<thumbnail>./media/box3d/DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).png</thumbnail>
+		<fanart>./media/fanart/DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).jpg</fanart>
+		<titleshot>./media/screenshottitle/DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).jpg</titleshot>
+		<manual>./media/manuals/DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).pdf</manual>
+		<boxback>./media/boxtexture/DragonBall Z - Budokai Tenkaichi 2 (Europe, Australia) (En,Ja,Fr,De,Es,It).png</boxback>
+		<rating>0.9</rating>
+		<releasedate>20061103T000000</releasedate>
+		<developer>Spike Chunsoft</developer>
+		<publisher>Bandai Namco</publisher>
+		<genre>Combat-Combat / 3D</genre>
+		<players>2</players>
+		<playcount>5</playcount>
+		<lastplayed>20251210T142052</lastplayed>
+		<crc32>41555E59</crc32>
+		<lang>it,es,fr,de,jp,en</lang>
+		<region>eu</region>
+	</game>

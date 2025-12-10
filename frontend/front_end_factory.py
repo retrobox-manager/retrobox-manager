@@ -3,9 +3,9 @@
 
 
 from libraries.constants.constants import FrontEnd
-from libraries.frontend.abstract_frontend import AbstractFrontEnd
-from libraries.frontend.batocera.batocera_front_end import BatoceraFrontEnd
-from libraries.frontend.launchbox.launchbox_front_end import LaunchboxFrontEnd
+from frontend.abstract_frontend import AbstractFrontEnd
+from frontend.batocera.batocera_front_end import BatoceraFrontEnd
+from frontend.launchbox.launchbox_front_end import LaunchboxFrontEnd
 
 
 class FrontEndFactory:

@@ -5,8 +5,8 @@ import os
 from libraries.constants.constants import Constants, FrontEnd
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
-from libraries.frontend.abstract_frontend import AbstractFrontEnd
 from libraries.xml.xml_helper import XmlHelper
+from frontend.abstract_frontend import AbstractFrontEnd
 
 
 class LaunchboxFrontEnd(AbstractFrontEnd):
@@ -18,16 +18,24 @@ class LaunchboxFrontEnd(AbstractFrontEnd):
     def __init__(self):
         """Initialize FrontEnd"""
 
-        super().__init__()
-
         self.__folder_path = Context.get_front_end_path(
-            front_end=self.get_id()
+            front_end=self.get_enum()
         )
 
-    def get_id(self) -> FrontEnd:
-        """Get id"""
+    def get_enum(self) -> FrontEnd:
+        """Get enum"""
 
         return FrontEnd.LAUNCHBOX
+
+    def get_id(self) -> str:
+        """Get id"""
+
+        return self.get_enum().value.lower()
+
+    def get_rom_key(self) -> str:
+        """Get rom's key"""
+
+        return ''
 
     def list_platforms(self) -> list:
         """List platforms"""
@@ -65,11 +73,18 @@ class LaunchboxFrontEnd(AbstractFrontEnd):
         )
         return games
 
-    def do_export(
-        self,
-        game_id: str,
-        game_name: str
-    ):
-        """Do export for a plateform and a game"""
+    def retrieve_game_files(self, platform: str, game: str) -> dict:
+        """Retrieve game files"""
 
-        print('to implement!')
+        print(platform)
+        print(game)
+
+        return {}
+
+    def retrieve_game_info(self, platform: str, game: str) -> str:
+        """Retrieve game info"""
+
+        print(platform)
+        print(game)
+
+        return ''

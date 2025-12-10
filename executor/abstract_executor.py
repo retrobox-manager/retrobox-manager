@@ -1,18 +1,18 @@
 #!/usr/bin/python3
-"""Abstract FrontEnd"""
+"""Abstract Executor"""
 
 from abc import ABC, abstractmethod
 import threading
 import tkinter as tk
 from tkinter import ttk
 
-from libraries.constants.constants import Action, Constants, FrontEnd
+from libraries.constants.constants import Action, Category, Constants
 from libraries.context.context import Context
 from libraries.logging.logging_helper import LoggingHelper
 
 
-class AbstractFrontEnd(ABC):
-    """Abstract FrontEnd (Common for all frontends)"""
+class AbstractExecutor(ABC):
+    """Abstract Executor (Common for all executors)"""
 
     def __init__(
         self
@@ -65,7 +65,10 @@ class AbstractFrontEnd(ABC):
             message=Context.get_text(
                 'execution_started',
                 action=Context.get_text(
-                    Context.get_selected_action().value
+                    Context.get_selected_action().value,
+                    category=Context.get_text(
+                        Context.get_selected_category().value
+                    )
                 )
             )
         )
@@ -106,15 +109,7 @@ class AbstractFrontEnd(ABC):
 
             # Do execution for the current item
             try:
-                match(Context.get_selected_action()):
-                    case Action.EXPORT:
-                        self.do_export(
-                            game_id=row[Constants.UI_TABLE_KEY_COL_ID],
-                            game_name=row[Constants.UI_TABLE_KEY_COL_NAME]
-                        )
-
-                    case _:
-                        raise Exception('Not implemented action!')
+                self.do_execution(item=row)
             except Exception as exc:
                 LoggingHelper.log_error(
                     Context.get_text(
@@ -149,21 +144,17 @@ class AbstractFrontEnd(ABC):
         )
 
     @abstractmethod
-    def do_export(
-        self,
-        game_id: str,
-        game_name: str
-    ):
-        """Do export for a plateform and a game"""
+    def get_category(self) -> Category:
+        """Get Category"""
 
     @abstractmethod
-    def get_id(self) -> FrontEnd:
-        """Get id"""
+    def get_action(self) -> Action:
+        """Get Action"""
 
     @abstractmethod
-    def list_platforms(self) -> list:
-        """List platforms"""
+    def confirm_execution(self, parent: any) -> bool:
+        """Confirm for execution"""
 
     @abstractmethod
-    def list_games(self, platform: str) -> list:
-        """List games"""
+    def do_execution(self, item: dict):
+        """Do execution for an item"""

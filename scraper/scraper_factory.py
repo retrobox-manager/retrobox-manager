@@ -3,9 +3,9 @@
 
 
 from libraries.constants.constants import Scraper
-from libraries.scraper.abstract_scraper import AbstractScraper
-from libraries.scraper.emu_movies.emu_movies_scraper import EmuMoviesScraper
-from libraries.scraper.skraper.skraper_scraper import SkraperScraper
+from scraper.abstract_scraper import AbstractScraper
+from scraper.emu_movies.emu_movies_scraper import EmuMoviesScraper
+from scraper.skraper.skraper_scraper import SkraperScraper
 
 
 class ScraperFactory:

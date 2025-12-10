@@ -9,7 +9,7 @@ import socket
 import configparser
 import locale
 
-from libraries.constants.constants import Action, Constants, FrontEnd, Scraper
+from libraries.constants.constants import Action, Category, Constants, FrontEnd, Scraper
 
 # pylint: disable=unnecessary-comprehension
 # pylint: disable=too-many-public-methods
@@ -30,10 +30,10 @@ class Context:
     __working_path = None
     __base_path = None
     __packaged = False
+    __selected_category: Category = None
     __selected_action: Action = None
     __selected_front_end: str = None
     __selected_platform: str = None
-    __data_platform: str = None
     __available_front_ends = []
     __available_scrapers = []
     __front_ends_paths: dict[FrontEnd, Path] = {}
@@ -248,6 +248,24 @@ class Context:
         return Context.__simulated
 
     @staticmethod
+    def get_selected_category() -> Category:
+        """Get selected category"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__selected_category
+
+    @staticmethod
+    def set_selected_category(category: Category):
+        """Set selected category"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        Context.__selected_category = category
+
+    @staticmethod
     def get_selected_action() -> Action:
         """Get selected action"""
 
@@ -300,24 +318,6 @@ class Context:
             Context.init()
 
         Context.__selected_platform = platform
-
-    @staticmethod
-    def get_data_platform() -> str:
-        """Get data platform"""
-
-        if not Context.__initialized:
-            Context.init()
-
-        return Context.__data_platform
-
-    @staticmethod
-    def set_data_platform(platform: str):
-        """Set data platform"""
-
-        if not Context.__initialized:
-            Context.init()
-
-        Context.__data_platform = platform
 
     @staticmethod
     def list_available_front_ends() -> list:
