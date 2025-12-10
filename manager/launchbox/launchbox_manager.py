@@ -1,36 +1,23 @@
 #!/usr/bin/python3
-"""FrontEnd for LAUNCHBOX"""
+"""Manager for the Software LAUNCHBOX"""
 
 import os
-from libraries.constants.constants import Constants, FrontEnd
-from libraries.context.context import Context
+from libraries.constants.constants import Constants, Software
 from libraries.file.file_helper import FileHelper
 from libraries.xml.xml_helper import XmlHelper
-from frontend.abstract_frontend import AbstractFrontEnd
+from manager.abstract_manager import AbstractManager
 
 
-class LaunchboxFrontEnd(AbstractFrontEnd):
-    """FrontEnd for LAUNCHBOX"""
+class LaunchboxManager(AbstractManager):
+    """Manager for the Software LAUNCHBOX"""
 
     __PATH_DATA = 'Data'
     __PATH_PLATFORMS = 'Platforms'
 
-    def __init__(self):
-        """Initialize FrontEnd"""
-
-        self.__folder_path = Context.get_front_end_path(
-            front_end=self.get_enum()
-        )
-
-    def get_enum(self) -> FrontEnd:
+    def get_enum(self) -> Software:
         """Get enum"""
 
-        return FrontEnd.LAUNCHBOX
-
-    def get_id(self) -> str:
-        """Get id"""
-
-        return self.get_enum().value.lower()
+        return Software.LAUNCHBOX
 
     def get_rom_key(self) -> str:
         """Get rom's key"""
@@ -43,7 +30,7 @@ class LaunchboxFrontEnd(AbstractFrontEnd):
         platforms = []
         for relative_path in FileHelper.list_relative_paths(
             folder_path=os.path.join(
-                self.__folder_path,
+                self._folder_path,
                 self.__PATH_DATA,
                 self.__PATH_PLATFORMS
             ),
@@ -63,7 +50,7 @@ class LaunchboxFrontEnd(AbstractFrontEnd):
 
         games = XmlHelper.list_tag_values(
             xml_file_path=os.path.join(
-                self.__folder_path,
+                self._folder_path,
                 self.__PATH_DATA,
                 self.__PATH_PLATFORMS,
                 f'{platform}{Constants.XML_EXTENSION}'

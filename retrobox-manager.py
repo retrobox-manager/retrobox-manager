@@ -9,8 +9,8 @@ from tkinter import ttk
 from dialogs.about.about_dialog import AboutDialog
 from dialogs.execute.execute_dialog import ExecuteDialog
 from dialogs.setup.setup_dialog import SetupDialog
-from frontend.front_end_factory import FrontEndFactory
-from libraries.constants.constants import Action, Category, Constants, FrontEnd
+from manager.manager_factory import ManagerFactory
+from libraries.constants.constants import Action, Category, Constants, Software
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
 from libraries.text.text_helper import TextHelper
@@ -55,11 +55,11 @@ class ApplicationWindow:
 
             # Show/Hide combos depending on selected category
             if Context.get_selected_category() == Category.GAMES:
-                self.label_front_end.pack(
+                self.label_software.pack(
                     side=tk.LEFT,
                     padx=Constants.UI_PAD_SMALL
                 )
-                self.combo_front_end.pack(
+                self.combo_software.pack(
                     side=tk.LEFT,
                     padx=Constants.UI_PAD_SMALL
                 )
@@ -71,10 +71,10 @@ class ApplicationWindow:
                     side=tk.LEFT,
                     padx=Constants.UI_PAD_SMALL
                 )
-                self.combo_front_end.current(0)
+                self.combo_software.current(0)
             else:
-                self.label_front_end.pack_forget()
-                self.combo_front_end.pack_forget()
+                self.label_software.pack_forget()
+                self.combo_software.pack_forget()
                 self.label_platform.pack_forget()
                 self.combo_platform.pack_forget()
 
@@ -120,22 +120,22 @@ class ApplicationWindow:
                 list(Action)[self.combo_action.current()]
             )
 
-            # Select first front end
-            self.combo_front_end.current(0)
-            self.combo_front_end.event_generate("<<ComboboxSelected>>")
+            # Select first software
+            self.combo_software.current(0)
+            self.combo_software.event_generate("<<ComboboxSelected>>")
 
-        # If source is front end
-        elif event.widget == self.combo_front_end:
+        # If source is software
+        elif event.widget == self.combo_software:
             # Update context from selection
-            Context.set_selected_front_end(
-                list(FrontEnd)[self.combo_front_end.current()]
+            Context.set_selected_software(
+                list(Software)[self.combo_software.current()]
             )
 
             # Update platforms
             platforms = []
             if Context.get_selected_action() == Action.EXPORT:
-                platforms = FrontEndFactory.create(
-                    front_end=Context.get_selected_front_end()
+                platforms = ManagerFactory.create(
+                    software=Context.get_selected_software()
                 ).list_platforms()
             else:
                 platforms = FileHelper.list_sub_directories(
@@ -145,7 +145,7 @@ class ApplicationWindow:
                 values=platforms
             )
 
-            # Select first front platform
+            # Select first software
             if len(platforms) > 0:
                 self.combo_platform.current(0)
                 self.combo_platform.event_generate("<<ComboboxSelected>>")
@@ -165,8 +165,8 @@ class ApplicationWindow:
         table_rows = []
         match(Context.get_selected_action()):
             case Action.EXPORT:
-                games = FrontEndFactory.create(
-                    front_end=Context.get_selected_front_end()
+                games = ManagerFactory.create(
+                    software=Context.get_selected_software()
                 ).list_games(
                     platform=Context.get_selected_platform()
                 )
@@ -293,24 +293,24 @@ class ApplicationWindow:
             self.__on_combo_changed
         )
 
-        # Create Combobox for front ends
-        self.label_front_end = tk.Label(
+        # Create Combobox for softwares
+        self.label_software = tk.Label(
             combo_frame
         )
-        self.label_front_end.pack(
+        self.label_software.pack(
             side=tk.LEFT,
             padx=Constants.UI_PAD_SMALL
         )
-        self.combo_front_end = ttk.Combobox(
+        self.combo_software = ttk.Combobox(
             combo_frame,
             width=10
         )
-        self.combo_front_end.pack(
+        self.combo_software.pack(
             side=tk.LEFT,
             padx=Constants.UI_PAD_SMALL
         )
-        self.combo_front_end.config(state="readonly")
-        self.combo_front_end.bind(
+        self.combo_software.config(state="readonly")
+        self.combo_software.bind(
             "<<ComboboxSelected>>",
             self.__on_combo_changed
         )
@@ -455,8 +455,8 @@ class ApplicationWindow:
         self.label_action.config(
             text=Context.get_text('action')
         )
-        self.label_front_end.config(
-            text=Context.get_text('front_end')
+        self.label_software.config(
+            text=Context.get_text('software')
         )
         self.label_platform.config(
             text=Context.get_text('platform')
@@ -467,18 +467,18 @@ class ApplicationWindow:
             values=[Context.get_text(category.value) for category in Category]
         )
 
-        # Fix values for combobox front ends
-        front_ends = []
-        for front_end in FrontEnd:
-            front_ends.append(front_end.value)
-        self.combo_front_end.configure(
-            values=front_ends
+        # Fix values for combobox softwares
+        softwares = []
+        for software in Software:
+            softwares.append(software.value)
+        self.combo_software.configure(
+            values=softwares
         )
 
         # Set default selection
         self.combo_category.set('')
         self.combo_action.set('')
-        self.combo_front_end.set('')
+        self.combo_software.set('')
         self.combo_platform.set('')
         self.combo_category.current(0)
         self.combo_category.event_generate("<<ComboboxSelected>>")

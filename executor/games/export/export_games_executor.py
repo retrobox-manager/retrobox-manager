@@ -20,7 +20,7 @@ class ExportGamesExecutor(AbstractGamesExecutor):
         """Do execution for an item"""
 
         # Retrieve the media files for the game
-        game_files = self._front_end.retrieve_game_files(
+        game_files = self._software_manager.retrieve_game_files(
             platform=Context.get_selected_platform(),
             game=item[Constants.UI_TABLE_KEY_COL_NAME]
         )
@@ -28,7 +28,7 @@ class ExportGamesExecutor(AbstractGamesExecutor):
         # Copy files for rom and media
         for file_id, file_path in game_files.items():
             folder = ''
-            if file_id == self._front_end.get_rom_key():
+            if file_id == self._software_manager.get_rom_key():
                 folder = self._ROM_FOLDER_NAME
             else:
                 folder = os.path.join(
@@ -47,7 +47,7 @@ class ExportGamesExecutor(AbstractGamesExecutor):
             )
 
         # Retrieve game's info
-        game_info = self._front_end.retrieve_game_info(
+        game_info = self._software_manager.retrieve_game_info(
             platform=Context.get_selected_platform(),
             game=item[Constants.UI_TABLE_KEY_COL_NAME]
         )
@@ -58,7 +58,7 @@ class ExportGamesExecutor(AbstractGamesExecutor):
                 Context.get_games_path(),
                 self._platform_data[self._TAG_NAME],
                 item[Constants.UI_TABLE_KEY_COL_ID],
-                f'{self._front_end.get_id()}{Constants.XML_EXTENSION}'
+                f'{self._software_manager.get_id()}{Constants.XML_EXTENSION}'
             ),
             content=game_info
         )

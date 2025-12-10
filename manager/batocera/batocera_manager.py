@@ -1,16 +1,15 @@
 #!/usr/bin/python3
-"""FrontEnd for BATOCERA"""
+"""Manager for the Software BATOCERA"""
 
 import os
-from libraries.constants.constants import FrontEnd
-from libraries.context.context import Context
+from libraries.constants.constants import Software
 from libraries.file.file_helper import FileHelper
 from libraries.xml.xml_helper import XmlHelper
-from frontend.abstract_frontend import AbstractFrontEnd
+from manager.abstract_manager import AbstractManager
 
 
-class BatoceraFrontEnd(AbstractFrontEnd):
-    """FrontEnd for BATOCERA"""
+class BatoceraManager(AbstractManager):
+    """Manager for the Software BATOCERA"""
 
     __PATH_ROMS = 'roms'
     __PATH_GAMELIST = 'gamelist.xml'
@@ -20,13 +19,6 @@ class BatoceraFrontEnd(AbstractFrontEnd):
 
     __FILE_PREFIX = './'
 
-    def __init__(self):
-        """Initialize FrontEnd"""
-
-        self.__folder_path = Context.get_front_end_path(
-            front_end=self.get_enum()
-        )
-
     def __retrieve_game_list_xml_path(
         self,
         platform: str
@@ -34,21 +26,16 @@ class BatoceraFrontEnd(AbstractFrontEnd):
         """Retrieve the path for XML file listing games"""
 
         return os.path.join(
-            self.__folder_path,
+            self._folder_path,
             self.__PATH_ROMS,
             platform,
             self.__PATH_GAMELIST
         )
 
-    def get_enum(self) -> FrontEnd:
+    def get_enum(self) -> Software:
         """Get enum"""
 
-        return FrontEnd.BATOCERA
-
-    def get_id(self) -> str:
-        """Get id"""
-
-        return self.get_enum().value.lower()
+        return Software.BATOCERA
 
     def get_rom_key(self) -> str:
         """Get rom's key"""
@@ -61,7 +48,7 @@ class BatoceraFrontEnd(AbstractFrontEnd):
         platforms = []
         for platform in FileHelper.list_sub_directories(
             folder_path=os.path.join(
-                self.__folder_path,
+                self._folder_path,
                 self.__PATH_ROMS
             )
         ):
@@ -111,7 +98,7 @@ class BatoceraFrontEnd(AbstractFrontEnd):
         for key, value in game_data.items():
             if value.startswith(self.__FILE_PREFIX):
                 result[key] = os.path.join(
-                    self.__folder_path,
+                    self._folder_path,
                     self.__PATH_ROMS,
                     platform,
                     value[2:].replace('/', '\\')

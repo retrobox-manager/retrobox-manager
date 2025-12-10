@@ -21,18 +21,31 @@ class Action(Enum):
     EDIT = 'action_edit'
 
 
-class FrontEnd(Enum):
-    """FrontEnd"""
+class Software(Enum):
+    """Software"""
 
     BATOCERA = 'Batocera'
     LAUNCHBOX = 'LaunchBox'
-
-
-class Scraper(Enum):
-    """Scraper"""
-
     EMU_MOVIES = 'EmuMovies'
     SKRAPER = 'Skraper'
+
+
+class Media(Enum):
+    """Media"""
+
+    BOX_2D_FRONT = 'media_box_2d_front'
+    BOX_2D_SIDE = 'media_box_2d_side'
+    BOX_2D_BACK = 'media_box_2d_back'
+    BOX_3D = 'media_box_3d'
+    SUPPORT = 'media_support'
+    FAN_ART = 'media_fan_art'
+    MANUAL = 'media_manual'
+    SCREENSHOT_GAME = 'media_screenshot_game'
+    SCREENSHOT_TITLE = 'media_screenshot_title'
+    LOGO = 'media_logo'
+    LOGO_CARBON = 'media_logo_carbon'
+    LOGO_STEEL = 'media_logo_steel'
+    VIDEO = 'media_video'
 
 
 class Constants:
@@ -64,12 +77,11 @@ class Constants:
     SETUP_LANG_CODE = 'lang_code'
     SETUP_MONITOR = 'monitor'
     SETUP_SIMULATED = 'simulated'
-    SETUP_AVAILABLE_FRONT_ENDS = 'available_front_ends'
-    SETUP_FRONT_END_BATOCERA_PATH = 'front_end_batocera_path'
-    SETUP_FRONT_END_LAUNCHBOX_PATH = 'front_end_launchbox_path'
-    SETUP_AVAILABLE_SCRAPERS = 'available_scrapers'
-    SETUP_SCRAPER_EMU_MOVIES_PATH = 'scraper_emu_movies_path'
-    SETUP_SCRAPER_SKRAPER_PATH = 'scraper_skraper_path'
+    SETUP_AVAILABLE_SOFTWARES = 'available_softwares'
+    SETUP_SOFTWARE_BATOCERA_PATH = 'software_batocera_path'
+    SETUP_SOFTWARE_LAUNCHBOX_PATH = 'software_launchbox_path'
+    SETUP_SOFTWARE_EMU_MOVIES_PATH = 'software_emu_movies_path'
+    SETUP_SOFTWARE_SKRAPER_PATH = 'software_skraper_path'
 
     # Constants for item color
     ITEM_COLOR_BLACK = 'black'

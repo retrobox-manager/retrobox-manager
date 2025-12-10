@@ -9,7 +9,7 @@ import socket
 import configparser
 import locale
 
-from libraries.constants.constants import Action, Category, Constants, FrontEnd, Scraper
+from libraries.constants.constants import Action, Category, Constants, Software
 
 # pylint: disable=unnecessary-comprehension
 # pylint: disable=too-many-public-methods
@@ -32,12 +32,10 @@ class Context:
     __packaged = False
     __selected_category: Category = None
     __selected_action: Action = None
-    __selected_front_end: str = None
     __selected_platform: str = None
-    __available_front_ends = []
-    __available_scrapers = []
-    __front_ends_paths: dict[FrontEnd, Path] = {}
-    __scrapers_paths: dict[Scraper, Path] = {}
+    __selected_software: str = None
+    __available_softwares = []
+    __softwares_paths: dict[Software, Path] = {}
     __selected_rows = []
 
     @staticmethod
@@ -98,10 +96,8 @@ class Context:
         Context.__lang_code = 'fr' if lang.startswith('fr') else 'en'
 
         # Initialize paths
-        for front_end in FrontEnd:
-            Context.__front_ends_paths[front_end] = ''
-        for scraper in Scraper:
-            Context.__scrapers_paths[scraper] = ''
+        for software in Software:
+            Context.__softwares_paths[software] = ''
 
         # Initialize monitor
         Context.__monitor = 0
@@ -284,24 +280,6 @@ class Context:
         Context.__selected_action = action
 
     @staticmethod
-    def get_selected_front_end() -> FrontEnd:
-        """Get selected front end"""
-
-        if not Context.__initialized:
-            Context.init()
-
-        return Context.__selected_front_end
-
-    @staticmethod
-    def set_selected_front_end(front_end: FrontEnd):
-        """Set selected front end"""
-
-        if not Context.__initialized:
-            Context.init()
-
-        Context.__selected_front_end = front_end
-
-    @staticmethod
     def get_selected_platform() -> str:
         """Get selected platform"""
 
@@ -320,44 +298,42 @@ class Context:
         Context.__selected_platform = platform
 
     @staticmethod
-    def list_available_front_ends() -> list:
-        """List available front ends"""
+    def get_selected_software() -> Software:
+        """Get selected software"""
 
         if not Context.__initialized:
             Context.init()
 
-        return Context.__available_front_ends
+        return Context.__selected_software
 
     @staticmethod
-    def get_front_end_path(
-        front_end: FrontEnd
+    def set_selected_software(software: Software):
+        """Set selected software"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        Context.__selected_software = software
+
+    @staticmethod
+    def get_software_path(
+        software: Software
     ) -> Path:
-        """Get front end path"""
+        """Get software path"""
 
         if not Context.__initialized:
             Context.init()
 
-        return Context.__front_ends_paths[front_end]
+        return Context.__softwares_paths[software]
 
     @staticmethod
-    def list_available_scrapers() -> list:
-        """List available scrapers"""
+    def list_available_softwares() -> list:
+        """List available softwares"""
 
         if not Context.__initialized:
             Context.init()
 
-        return Context.__available_scrapers
-
-    @staticmethod
-    def get_scraper_path(
-        scraper: Scraper
-    ) -> Path:
-        """Get scraper path"""
-
-        if not Context.__initialized:
-            Context.init()
-
-        return Context.__scrapers_paths[scraper]
+        return Context.__available_softwares
 
     @staticmethod
     def get_selected_rows() -> list:
@@ -408,46 +384,38 @@ class Context:
                     Constants.SETUP_SIMULATED
                 ] == 'True'
 
-            if Constants.SETUP_AVAILABLE_FRONT_ENDS in setup_items:
-                Context.__available_front_ends = []
-                for front_end in FrontEnd:
-                    if f"'{front_end.value}'" in setup_items[
-                        Constants.SETUP_AVAILABLE_FRONT_ENDS
+            if Constants.SETUP_AVAILABLE_SOFTWARES in setup_items:
+                Context.__available_softwares = []
+                for software in Software:
+                    if f"'{software.value}'" in setup_items[
+                        Constants.SETUP_AVAILABLE_SOFTWARES
                     ]:
-                        Context.__available_front_ends.append(front_end.value)
+                        Context.__available_softwares.append(software.value)
 
-            if Constants.SETUP_FRONT_END_BATOCERA_PATH in setup_items:
-                Context.__front_ends_paths[
-                    FrontEnd.BATOCERA
+            if Constants.SETUP_SOFTWARE_BATOCERA_PATH in setup_items:
+                Context.__softwares_paths[
+                    Software.BATOCERA
                 ] = Path(setup_items[
-                    Constants.SETUP_FRONT_END_BATOCERA_PATH
+                    Constants.SETUP_SOFTWARE_BATOCERA_PATH
                 ])
 
-            if Constants.SETUP_FRONT_END_LAUNCHBOX_PATH in setup_items:
-                Context.__front_ends_paths[
-                    FrontEnd.LAUNCHBOX
+            if Constants.SETUP_SOFTWARE_LAUNCHBOX_PATH in setup_items:
+                Context.__softwares_paths[
+                    Software.LAUNCHBOX
                 ] = Path(setup_items[
-                    Constants.SETUP_FRONT_END_LAUNCHBOX_PATH
+                    Constants.SETUP_SOFTWARE_LAUNCHBOX_PATH
                 ])
 
-            if Constants.SETUP_AVAILABLE_SCRAPERS in setup_items:
-                Context.__available_scrapers = []
-                for scraper in Scraper:
-                    if f"'{scraper.value}'" in setup_items[
-                        Constants.SETUP_AVAILABLE_SCRAPERS
-                    ]:
-                        Context.__available_scrapers.append(scraper.value)
-
-            if Constants.SETUP_SCRAPER_EMU_MOVIES_PATH in setup_items:
-                Context.__scrapers_paths[
-                    Scraper.EMU_MOVIES
+            if Constants.SETUP_SOFTWARE_EMU_MOVIES_PATH in setup_items:
+                Context.__softwares_paths[
+                    Software.EMU_MOVIES
                 ] = Path(setup_items[
-                    Constants.SETUP_SCRAPER_EMU_MOVIES_PATH
+                    Constants.SETUP_SOFTWARE_EMU_MOVIES_PATH
                 ])
 
-            if Constants.SETUP_SCRAPER_SKRAPER_PATH in setup_items:
-                Context.__scrapers_paths[
-                    Scraper.SKRAPER
+            if Constants.SETUP_SOFTWARE_SKRAPER_PATH in setup_items:
+                Context.__softwares_paths[
+                    Software.SKRAPER
                 ] = Path(setup_items[
-                    Constants.SETUP_SCRAPER_SKRAPER_PATH
+                    Constants.SETUP_SOFTWARE_SKRAPER_PATH
                 ])

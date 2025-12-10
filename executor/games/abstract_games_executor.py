@@ -6,7 +6,7 @@ import re
 from tkinter import messagebox, simpledialog
 from dialogs.selection.selection_dialog import SelectionDialog
 from executor.abstract_executor import AbstractExecutor
-from frontend.front_end_factory import FrontEndFactory
+from manager.manager_factory import ManagerFactory
 from libraries.constants.constants import Action, Category
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
@@ -37,9 +37,9 @@ class AbstractGamesExecutor(AbstractExecutor):
 
         super().__init__()
 
-        # Retrieve front end
-        self._front_end = FrontEndFactory.create(
-            front_end=Context.get_selected_front_end()
+        # Retrieve software manager
+        self._software_manager = ManagerFactory.create(
+            software=Context.get_selected_software()
         )
 
         # Set platform's data
@@ -66,11 +66,11 @@ class AbstractGamesExecutor(AbstractExecutor):
                 tag=self._TAG_PLATFORM
             )
 
-        # If platform found for the front end
+        # If platform found for the software
         for platform_data in platforms_data:
-            if self._front_end.get_id() not in platform_data:
+            if self._software_manager.get_id() not in platform_data:
                 continue
-            if platform_data[self._front_end.get_id()] != Context.get_selected_platform():
+            if platform_data[self._software_manager.get_id()] != Context.get_selected_platform():
                 continue
             self._platform_data = platform_data
             return True
@@ -78,7 +78,7 @@ class AbstractGamesExecutor(AbstractExecutor):
         # List unaffected platforms names
         unaffected_platforms_names = []
         for platform_data in platforms_data:
-            if self._front_end.get_id() not in platform_data:
+            if self._software_manager.get_id() not in platform_data:
                 unaffected_platforms_names.append(
                     platform_data[self._TAG_NAME]
                 )
@@ -111,7 +111,7 @@ class AbstractGamesExecutor(AbstractExecutor):
             # Create the new platform
             self._platform_data = {
                 self._TAG_NAME: new_platform,
-                self._front_end.get_id(): Context.get_selected_platform()
+                self._software_manager.get_id(): Context.get_selected_platform()
             }
             platforms_data.append(self._platform_data)
 
@@ -137,7 +137,7 @@ class AbstractGamesExecutor(AbstractExecutor):
             if platform_data[self._TAG_NAME] == existing_platform:
                 self._platform_data = platform_data
                 self._platform_data[
-                    self._front_end.get_id()
+                    self._software_manager.get_id()
                 ] = Context.get_selected_platform()
 
                 # Generate the XML from platforms data

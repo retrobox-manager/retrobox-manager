@@ -1,21 +1,30 @@
 #!/usr/bin/python3
-"""Abstract FrontEnd"""
+"""Abstract Manager"""
 
 from abc import ABC, abstractmethod
 
-from libraries.constants.constants import FrontEnd
+from libraries.constants.constants import Software
+from libraries.context.context import Context
 
 
-class AbstractFrontEnd(ABC):
-    """Abstract FrontEnd (Common for all frontends)"""
+class AbstractManager(ABC):
+    """Abstract manager (Common for all softwares)"""
 
-    @abstractmethod
-    def get_enum(self) -> FrontEnd:
-        """Get enum"""
+    def __init__(self):
+        """Initialize Manager"""
 
-    @abstractmethod
+        self._folder_path = Context.get_software_path(
+            software=self.get_enum()
+        )
+
     def get_id(self) -> str:
         """Get id"""
+
+        return self.get_enum().value.lower()
+
+    @abstractmethod
+    def get_enum(self) -> Software:
+        """Get enum"""
 
     @abstractmethod
     def get_rom_key(self) -> str:
