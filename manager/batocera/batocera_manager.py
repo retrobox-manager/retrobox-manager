@@ -2,7 +2,7 @@
 """Manager for the Software BATOCERA"""
 
 import os
-from libraries.constants.constants import Software
+from libraries.constants.constants import Media, Software
 from libraries.file.file_helper import FileHelper
 from libraries.xml.xml_helper import XmlHelper
 from manager.abstract_manager import AbstractManager
@@ -18,6 +18,17 @@ class BatoceraManager(AbstractManager):
     __TAG_NAME = 'name'
 
     __FILE_PREFIX = './'
+
+    __MEDIA = {
+        'image': Media.SCREENSHOT_GAME,
+        'marquee': Media.LOGO,
+        'thumbnail': Media.BOX_3D,
+        'fanart': Media.FAN_ART,
+        'titleshot': Media.SCREENSHOT_TITLE,
+        'boxback': Media.BOX_2D_BACK,
+        'manual': Media.MANUAL,
+        'video': Media.VIDEO
+    }
 
     def __retrieve_game_list_xml_path(
         self,

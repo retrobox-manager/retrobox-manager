@@ -39,12 +39,12 @@ class Media(Enum):
     BOX_3D = 'media_box_3d'
     SUPPORT = 'media_support'
     FAN_ART = 'media_fan_art'
-    MANUAL = 'media_manual'
     SCREENSHOT_GAME = 'media_screenshot_game'
     SCREENSHOT_TITLE = 'media_screenshot_title'
     LOGO = 'media_logo'
     LOGO_CARBON = 'media_logo_carbon'
     LOGO_STEEL = 'media_logo_steel'
+    MANUAL = 'media_manual'
     VIDEO = 'media_video'
 
 

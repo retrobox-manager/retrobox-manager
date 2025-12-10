@@ -14,6 +14,9 @@ class LaunchboxManager(AbstractManager):
     __PATH_DATA = 'Data'
     __PATH_PLATFORMS = 'Platforms'
 
+    __MEDIA = {
+    }
+
     def get_enum(self) -> Software:
         """Get enum"""
 
