@@ -398,7 +398,7 @@ class SetupDialog:
             self.__on_entry_changed
         )
         self.software_batocera_boolean_var.set(
-            current_software.value in Context.list_available_softwares()
+            current_software in Context.list_available_softwares()
         )
         software_batocera_checkbox = tk.Checkbutton(
             software_batocera_frame,
@@ -475,7 +475,7 @@ class SetupDialog:
             self.__on_entry_changed
         )
         self.software_launchbox_boolean_var.set(
-            current_software.value in Context.list_available_softwares()
+            current_software in Context.list_available_softwares()
         )
         software_launchbox_checkbox = tk.Checkbutton(
             software_launchbox_frame,
@@ -552,7 +552,7 @@ class SetupDialog:
             self.__on_entry_changed
         )
         self.software_emu_movies_boolean_var.set(
-            current_software.value in Context.list_available_softwares()
+            current_software in Context.list_available_softwares()
         )
         software_emu_movies_checkbox = tk.Checkbutton(
             software_emu_movies_frame,
@@ -629,7 +629,7 @@ class SetupDialog:
             self.__on_entry_changed
         )
         self.software_skraper_boolean_var.set(
-            current_software.value in Context.list_available_softwares()
+            current_software in Context.list_available_softwares()
         )
         software_skraper_checkbox = tk.Checkbutton(
             software_skraper_frame,

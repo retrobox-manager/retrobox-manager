@@ -9,7 +9,7 @@ import socket
 import configparser
 import locale
 
-from libraries.constants.constants import Action, Category, Constants, Software
+from libraries.constants.constants import Action, Category, Constants, Platform, Software
 
 # pylint: disable=unnecessary-comprehension
 # pylint: disable=too-many-public-methods
@@ -32,9 +32,9 @@ class Context:
     __packaged = False
     __selected_category: Category = None
     __selected_action: Action = None
-    __selected_platform: str = None
-    __selected_software: str = None
-    __available_softwares = []
+    __selected_platform: Platform = None
+    __selected_software: Software = None
+    __available_softwares: list[Software] = []
     __softwares_paths: dict[Software, Path] = {}
     __selected_rows = []
 
@@ -280,7 +280,7 @@ class Context:
         Context.__selected_action = action
 
     @staticmethod
-    def get_selected_platform() -> str:
+    def get_selected_platform() -> Platform:
         """Get selected platform"""
 
         if not Context.__initialized:
@@ -289,7 +289,7 @@ class Context:
         return Context.__selected_platform
 
     @staticmethod
-    def set_selected_platform(platform: str):
+    def set_selected_platform(platform: Platform):
         """Set selected platform"""
 
         if not Context.__initialized:
@@ -327,7 +327,7 @@ class Context:
         return Context.__softwares_paths[software]
 
     @staticmethod
-    def list_available_softwares() -> list:
+    def list_available_softwares() -> list[Software]:
         """List available softwares"""
 
         if not Context.__initialized:
@@ -390,7 +390,7 @@ class Context:
                     if f"'{software.value}'" in setup_items[
                         Constants.SETUP_AVAILABLE_SOFTWARES
                     ]:
-                        Context.__available_softwares.append(software.value)
+                        Context.__available_softwares.append(software)
 
             if Constants.SETUP_SOFTWARE_BATOCERA_PATH in setup_items:
                 Context.__softwares_paths[

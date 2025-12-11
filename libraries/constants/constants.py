@@ -30,22 +30,30 @@ class Software(Enum):
     SKRAPER = 'Skraper'
 
 
+class Platform(Enum):
+    """Platform"""
+
+    SEGA_MASTERSYSTEM = 'Sega Master System'
+    SEGA_MEGADRIVE = 'Sega Megadrive'
+
+
 class Media(Enum):
     """Media"""
 
-    BOX_2D_FRONT = 'media_box_2d_front'
-    BOX_2D_SIDE = 'media_box_2d_side'
-    BOX_2D_BACK = 'media_box_2d_back'
-    BOX_3D = 'media_box_3d'
-    SUPPORT = 'media_support'
-    FAN_ART = 'media_fan_art'
-    SCREENSHOT_GAME = 'media_screenshot_game'
-    SCREENSHOT_TITLE = 'media_screenshot_title'
-    LOGO = 'media_logo'
-    LOGO_CARBON = 'media_logo_carbon'
-    LOGO_STEEL = 'media_logo_steel'
-    MANUAL = 'media_manual'
-    VIDEO = 'media_video'
+    BOX_2D_FRONT = 'box_2d_front'
+    BOX_2D_SIDE = 'box_2d_side'
+    BOX_2D_BACK = 'box_2d_back'
+    BOX_3D = 'box_3d'
+    SUPPORT = 'support'
+    FAN_ART = 'fan_art'
+    SCREENSHOT_GAME = 'screenshot_game'
+    SCREENSHOT_TITLE = 'screenshot_title'
+    LOGO = 'logo'
+    LOGO_CARBON = 'logo_carbon'
+    LOGO_STEEL = 'logo_steel'
+    BEZEL = 'bezel'
+    MANUAL = 'manual'
+    VIDEO = 'video'
 
 
 class Constants:

@@ -10,9 +10,8 @@ from dialogs.about.about_dialog import AboutDialog
 from dialogs.execute.execute_dialog import ExecuteDialog
 from dialogs.setup.setup_dialog import SetupDialog
 from manager.manager_factory import ManagerFactory
-from libraries.constants.constants import Action, Category, Constants, Software
+from libraries.constants.constants import Action, Category, Constants, Platform, Software
 from libraries.context.context import Context
-from libraries.file.file_helper import FileHelper
 from libraries.text.text_helper import TextHelper
 from libraries.ui.ui_helper import UIHelper
 from libraries.ui.ui_table import UITable
@@ -132,28 +131,29 @@ class ApplicationWindow:
             )
 
             # Update platforms
-            platforms = []
-            if Context.get_selected_action() == Action.EXPORT:
-                platforms = ManagerFactory.create(
-                    software=Context.get_selected_software()
-                ).list_platforms()
-            else:
-                platforms = FileHelper.list_sub_directories(
-                    folder_path=Context.get_games_path()
-                )
+            values = []
+            for platform in ManagerFactory.create(
+                software=Context.get_selected_software()
+            ).list_platforms():
+                values.append(platform.value)
             self.combo_platform.configure(
-                values=platforms
+                values=values
             )
 
             # Select first software
-            if len(platforms) > 0:
+            if len(values) > 0:
                 self.combo_platform.current(0)
+                self.combo_platform.event_generate("<<ComboboxSelected>>")
+            else:
+                self.combo_platform.set('')
                 self.combo_platform.event_generate("<<ComboboxSelected>>")
 
         # If source is platform
         elif event.widget == self.combo_platform:
             # Update context from selection
-            Context.set_selected_platform(self.combo_platform.get())
+            Context.set_selected_platform(
+                list(Platform)[self.combo_platform.current()]
+            )
 
             # Update UI
             self.__update_ui()
@@ -468,11 +468,12 @@ class ApplicationWindow:
         )
 
         # Fix values for combobox softwares
-        softwares = []
+        available_softwares = []
         for software in Software:
-            softwares.append(software.value)
+            if software in Context.list_available_softwares():
+                available_softwares.append(software.value)
         self.combo_software.configure(
-            values=softwares
+            values=available_softwares
         )
 
         # Set default selection

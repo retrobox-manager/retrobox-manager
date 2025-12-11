@@ -19,30 +19,61 @@ class ExportGamesExecutor(AbstractGamesExecutor):
     def do_execution(self, item: dict):
         """Do execution for an item"""
 
-        # Retrieve the media files for the game
-        game_files = self._software_manager.retrieve_game_files(
+        # Copy files for media
+        for media, file_path in self._software_manager.retrieve_media_files(
             platform=Context.get_selected_platform(),
             game=item[Constants.UI_TABLE_KEY_COL_NAME]
-        )
+        ).items():
+            # Retrieve destination's folder
+            destination_folder = os.path.join(
+                Context.get_games_path(),
+                Context.get_selected_platform().value,
+                item[Constants.UI_TABLE_KEY_COL_ID],
+                self._MEDIA_FOLDER_NAME,
+                media.value
+            )
 
-        # Copy files for rom and media
-        for file_id, file_path in game_files.items():
-            folder = ''
-            if file_id == self._software_manager.get_rom_key():
-                folder = self._ROM_FOLDER_NAME
-            else:
-                folder = os.path.join(
-                    self._MEDIA_FOLDER_NAME,
-                    file_id
-                )
+            # Delete destination's folder
+            FileHelper.delete_folder(
+                folder_path=destination_folder
+            )
+
+            # Copy file in destination's folder
             FileHelper.copy_file(
                 source_file_path=file_path,
                 destination_file_path=os.path.join(
-                    Context.get_games_path(),
-                    self._platform_data[self._TAG_NAME],
-                    item[Constants.UI_TABLE_KEY_COL_ID],
-                    folder,
+                    destination_folder,
                     os.path.basename(file_path)
+                )
+            )
+
+        # Copy rom
+        rom_file = self._software_manager.retrieve_rom_file(
+            platform=Context.get_selected_platform(),
+            game=item[Constants.UI_TABLE_KEY_COL_NAME]
+        )
+        if rom_file is not None or FileHelper.is_file_exists(
+            file_path=rom_file
+        ):
+            # Retrieve destination's folder
+            destination_folder = os.path.join(
+                Context.get_games_path(),
+                Context.get_selected_platform().value,
+                item[Constants.UI_TABLE_KEY_COL_ID],
+                self._ROM_FOLDER_NAME,
+            )
+
+            # Delete destination's folder
+            FileHelper.delete_folder(
+                folder_path=destination_folder
+            )
+
+            # Copy file in destination's folder
+            FileHelper.copy_file(
+                source_file_path=rom_file,
+                destination_file_path=os.path.join(
+                    destination_folder,
+                    os.path.basename(rom_file)
                 )
             )
 
@@ -56,7 +87,7 @@ class ExportGamesExecutor(AbstractGamesExecutor):
         FileHelper.write_file(
             file_path=os.path.join(
                 Context.get_games_path(),
-                self._platform_data[self._TAG_NAME],
+                Context.get_selected_platform().value,
                 item[Constants.UI_TABLE_KEY_COL_ID],
                 f'{self._software_manager.get_id()}{Constants.XML_EXTENSION}'
             ),

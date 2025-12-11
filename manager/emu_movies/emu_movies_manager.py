@@ -1,14 +1,15 @@
 #!/usr/bin/python3
 """Manager for the Software EMU_MOVIES"""
 
-from libraries.constants.constants import Media, Software
+from typing import Dict, List
+from libraries.constants.constants import Media, Platform, Software
 from manager.abstract_manager import AbstractManager
 
 
 class EmuMoviesManager(AbstractManager):
     """Manager for the Software EMU_MOVIES"""
 
-    __MEDIA = {
+    __MEDIA_DICT = {
         'Background': Media.FAN_ART,
         'Box': Media.BOX_2D_FRONT,
         'Box_3D': Media.BOX_3D,
@@ -24,37 +25,45 @@ class EmuMoviesManager(AbstractManager):
         'Video_MP4_HI_QUAL': Media.VIDEO
     }
 
+    __PLATFORM_DICT = {
+        'mastersystem': Platform.SEGA_MASTERSYSTEM,
+        'megadrive': Platform.SEGA_MEGADRIVE
+    }
+
     def get_enum(self) -> Software:
         """Get enum"""
 
         return Software.EMU_MOVIES
 
-    def get_rom_key(self) -> str:
-        """Get rom's key"""
-
-        return ''
-
-    def list_platforms(self) -> list:
+    def list_platforms(self) -> List[Platform]:
         """List platforms"""
 
         return []
 
-    def list_games(self, platform: str) -> list:
+    def list_games(self, platform: Platform) -> List[str]:
         """List games"""
 
         print(platform)
 
         return []
 
-    def retrieve_game_files(self, platform: str, game: str) -> dict:
-        """Retrieve game files"""
+    def retrieve_media_files(self, platform: Platform, game: str) -> Dict[Media, str]:
+        """Retrieve media files"""
 
         print(platform)
         print(game)
 
         return {}
 
-    def retrieve_game_info(self, platform: str, game: str) -> str:
+    def retrieve_rom_file(self, platform: Platform, game: str) -> str:
+        """Retrieve rom file"""
+
+        print(platform)
+        print(game)
+
+        return None
+
+    def retrieve_game_info(self, platform: Platform, game: str) -> str:
         """Retrieve game info"""
 
         print(platform)

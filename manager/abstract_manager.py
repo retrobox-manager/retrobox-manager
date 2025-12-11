@@ -2,8 +2,9 @@
 """Abstract Manager"""
 
 from abc import ABC, abstractmethod
+from typing import Dict, List
 
-from libraries.constants.constants import Software
+from libraries.constants.constants import Media, Platform, Software
 from libraries.context.context import Context
 
 
@@ -27,21 +28,21 @@ class AbstractManager(ABC):
         """Get enum"""
 
     @abstractmethod
-    def get_rom_key(self) -> str:
-        """Get rom's key"""
-
-    @abstractmethod
-    def list_platforms(self) -> list:
+    def list_platforms(self) -> List[Platform]:
         """List platforms"""
 
     @abstractmethod
-    def list_games(self, platform: str) -> list:
+    def list_games(self, platform: Platform) -> List[str]:
         """List games"""
 
     @abstractmethod
-    def retrieve_game_files(self, platform: str, game: str) -> dict:
-        """Retrieve game files"""
+    def retrieve_media_files(self, platform: Platform, game: str) -> Dict[Media, str]:
+        """Retrieve media files"""
 
     @abstractmethod
-    def retrieve_game_info(self, platform: str, game: str) -> str:
+    def retrieve_rom_file(self, platform: Platform, game: str) -> str:
+        """Retrieve rom file"""
+
+    @abstractmethod
+    def retrieve_game_info(self, platform: Platform, game: str) -> str:
         """Retrieve game info"""

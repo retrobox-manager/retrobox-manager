@@ -47,6 +47,13 @@ class AbstractExecutor(ABC):
 
         return self.__execution_finished
 
+    # pylint: disable=unused-argument
+    def confirm_execution(self, parent: any) -> True:
+        """Confirm for execution"""
+
+        # No confirmation by default
+        return True
+
     def execute(self):
         """Execute"""
 
@@ -150,10 +157,6 @@ class AbstractExecutor(ABC):
     @abstractmethod
     def get_action(self) -> Action:
         """Get Action"""
-
-    @abstractmethod
-    def confirm_execution(self, parent: any) -> bool:
-        """Confirm for execution"""
 
     @abstractmethod
     def do_execution(self, item: dict):

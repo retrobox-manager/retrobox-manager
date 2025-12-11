@@ -2,7 +2,8 @@
 """Manager for the Software LAUNCHBOX"""
 
 import os
-from libraries.constants.constants import Constants, Software
+from typing import Dict, List
+from libraries.constants.constants import Constants, Media, Platform, Software
 from libraries.file.file_helper import FileHelper
 from libraries.xml.xml_helper import XmlHelper
 from manager.abstract_manager import AbstractManager
@@ -14,23 +15,28 @@ class LaunchboxManager(AbstractManager):
     __PATH_DATA = 'Data'
     __PATH_PLATFORMS = 'Platforms'
 
-    __MEDIA = {
+    __MEDIA_DICT = {
     }
+
+    __PLATFORM_DICT = {
+        'Sega Master System': Platform.SEGA_MASTERSYSTEM,
+        'MegaDrive': Platform.SEGA_MEGADRIVE
+    }
+
+    __PLATFORM_DICT_INV = {v: k for k, v in __PLATFORM_DICT.items()}
 
     def get_enum(self) -> Software:
         """Get enum"""
 
         return Software.LAUNCHBOX
 
-    def get_rom_key(self) -> str:
-        """Get rom's key"""
-
-        return ''
-
-    def list_platforms(self) -> list:
+    def list_platforms(self) -> List[Platform]:
         """List platforms"""
 
-        platforms = []
+        # Initialize result
+        result: List[Platform] = []
+
+        # Add platforms linked to a XML file
         for relative_path in FileHelper.list_relative_paths(
             folder_path=os.path.join(
                 self._folder_path,
@@ -42,36 +48,54 @@ class LaunchboxManager(AbstractManager):
         ):
             if not relative_path.endswith(Constants.XML_EXTENSION):
                 continue
-            platforms.append(
-                relative_path[:-len(Constants.XML_EXTENSION)]
-            )
+            key = relative_path[:-len(Constants.XML_EXTENSION)]
+            platform = self.__PLATFORM_DICT.get(key, None)
+            if platform is not None:
+                result.append(platform)
 
-        return platforms
+        return result
 
-    def list_games(self, platform: str) -> list:
+    def list_games(self, platform: Platform) -> List[str]:
         """List games"""
 
-        games = XmlHelper.list_tag_values(
-            xml_file_path=os.path.join(
-                self._folder_path,
-                self.__PATH_DATA,
-                self.__PATH_PLATFORMS,
-                f'{platform}{Constants.XML_EXTENSION}'
-            ),
-            parent_tag='Game',
-            tag='Title'
-        )
-        return games
+        # Initialize result
+        result: List[str] = []
 
-    def retrieve_game_files(self, platform: str, game: str) -> dict:
-        """Retrieve game files"""
+        # Retrieve game list XML path from platform
+        game_list_xml_path = os.path.join(
+            self._folder_path,
+            self.__PATH_DATA,
+            self.__PATH_PLATFORMS,
+            f'{self.__PLATFORM_DICT_INV[platform]}{Constants.XML_EXTENSION}'
+        )
+
+        # Add games for the platform
+        if FileHelper.is_file_exists(game_list_xml_path):
+            result = XmlHelper.list_tag_values(
+                xml_file_path=game_list_xml_path,
+                parent_tag='Game',
+                tag='Title'
+            )
+
+        return result
+
+    def retrieve_media_files(self, platform: Platform, game: str) -> Dict[Media, str]:
+        """Retrieve media files"""
 
         print(platform)
         print(game)
 
         return {}
 
-    def retrieve_game_info(self, platform: str, game: str) -> str:
+    def retrieve_rom_file(self, platform: Platform, game: str) -> str:
+        """Retrieve rom file"""
+
+        print(platform)
+        print(game)
+
+        return None
+
+    def retrieve_game_info(self, platform: Platform, game: str) -> str:
         """Retrieve game info"""
 
         print(platform)
