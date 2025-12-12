@@ -2,7 +2,6 @@
 """XML Helper"""
 
 import os
-from typing import Dict, List
 import xml.etree.ElementTree as ET
 
 
@@ -28,7 +27,7 @@ class XmlHelper:
         xml_file_path: str,
         tag: str,
         parent_tag: str | None = None
-    ) -> List[str]:
+    ) -> list[str]:
         """List values for a tag from a XML file"""
 
         # Initialize result
@@ -54,7 +53,7 @@ class XmlHelper:
         xml_file_path: str,
         tag: str,
         parent_tag: str | None = None
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """List data for a tag from a XML file"""
 
         # Initialize result
@@ -84,9 +83,9 @@ class XmlHelper:
     def get_tag_data(
         xml_file_path: str,
         tag: str,
-        criteria: Dict[str, str],
+        criteria: dict[str, str],
         parent_tag: str | None = None
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """Return the data dict for the first tag matching the criteria"""
 
         # Load tree from XML file
@@ -123,7 +122,7 @@ class XmlHelper:
     def get_tag_content(
         xml_file_path: str,
         tag: str,
-        criteria: Dict[str, str],
+        criteria: dict[str, str],
         parent_tag: str | None = None
     ) -> str:
         """Return the content for the first tag matching the criteria"""
@@ -161,7 +160,7 @@ class XmlHelper:
     @staticmethod
     def create_xml_from_list(
         xml_file_path: str,
-        data: List[Dict[str, str]],
+        data: list[dict[str, str]],
         root_tag: str,
         item_tag: str,
     ):

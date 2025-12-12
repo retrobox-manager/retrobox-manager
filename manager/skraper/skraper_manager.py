@@ -2,11 +2,13 @@
 """Manager for the Software SKRAPER"""
 
 import os
-from typing import Dict, List
-from libraries.constants.constants import Media, Platform, Software
+from libraries.constants.constants import Constants, Media, Platform, Software
 from libraries.file.file_helper import FileHelper
 from libraries.xml.xml_helper import XmlHelper
 from manager.abstract_manager import AbstractManager
+
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-positional-arguments
 
 
 class SkraperManager(AbstractManager):
@@ -16,10 +18,9 @@ class SkraperManager(AbstractManager):
 
     __TAG_GAME = 'game'
     __TAG_NAME = 'name'
+    __TAG_PATH = 'path'
 
     __FILE_PREFIX = './'
-
-    __ROM_KEY = 'path'
 
     __MEDIA_PATH = 'media'
 
@@ -71,11 +72,11 @@ class SkraperManager(AbstractManager):
 
         return Software.SKRAPER
 
-    def list_platforms(self) -> List[Platform]:
+    def list_platforms(self) -> list[Platform]:
         """List platforms"""
 
         # Initialize result
-        result: List[Platform] = []
+        result: list[Platform] = []
 
         # Add platforms linked to a sub directory
         for folder in FileHelper.list_sub_directories(
@@ -87,11 +88,11 @@ class SkraperManager(AbstractManager):
 
         return result
 
-    def list_games(self, platform: Platform) -> List[str]:
-        """List games"""
+    def list_games_with_rom(self, platform: Platform) -> dict[str, str]:
+        """List games in a dictionary where the key is the rom and the value is the name"""
 
         # Initialize result
-        result: List[str] = []
+        result: dict[str, str] = {}
 
         # Retrieve game list XML path from platform
         game_list_xml_path = os.path.join(
@@ -102,19 +103,41 @@ class SkraperManager(AbstractManager):
 
         # Add games for the platform
         if FileHelper.is_file_exists(game_list_xml_path):
-            result = XmlHelper.list_tag_values(
+            # Retrieve tags values
+            tag_path_values = XmlHelper.list_tag_values(
+                xml_file_path=game_list_xml_path,
+                parent_tag=self.__TAG_GAME,
+                tag=self.__TAG_PATH
+            )
+            tag_name_values = XmlHelper.list_tag_values(
                 xml_file_path=game_list_xml_path,
                 parent_tag=self.__TAG_GAME,
                 tag=self.__TAG_NAME
             )
 
+            # Error if BDD inconsistent
+            if len(tag_name_values) != len(tag_name_values):
+                raise Exception(f'{game_list_xml_path} is inconsistent!')
+
+            for rom_path in tag_path_values:
+                # Check if the rom file exists
+                rom_file = os.path.join(
+                    self._folder_path,
+                    self.__PLATFORM_DICT_INV.get(platform, ''),
+                    rom_path
+                )
+                if FileHelper.is_file_exists(rom_file):
+                    result[FileHelper.retrieve_file_name(rom_file)] = tag_name_values[
+                        tag_path_values.index(rom_path)
+                    ]
+
         return result
 
-    def retrieve_media_files(self, platform: Platform, game: str) -> Dict[Media, str]:
+    def retrieve_media_files(self, platform: Platform, game_item: dict) -> dict[Media, str]:
         """Retrieve media files"""
 
         # Initialize result
-        result: Dict[Media, str] = {}
+        result: dict[Media, str] = {}
 
         # Retrieve media's path
         media_path = os.path.join(
@@ -151,33 +174,23 @@ class SkraperManager(AbstractManager):
 
         return result
 
-    def retrieve_rom_file(self, platform: Platform, game: str) -> str:
+    def retrieve_rom_file(self, platform: Platform, game_item: dict) -> str:
         """Retrieve rom file"""
 
         # Initialize result
-        result: str = None
-
-        # Get game's data
-        game_data = XmlHelper.get_tag_data(
-            xml_file_path=self.__retrieve_game_list_xml_path(
-                platform=platform
-            ),
-            tag=self.__TAG_GAME,
-            criteria={
-                self.__TAG_NAME: game
-            }
+        result: str = os.path.join(
+            self._folder_path,
+            self.__PLATFORM_DICT_INV.get(platform, ''),
+            game_item[Constants.UI_TABLE_KEY_COL_ROM]
         )
 
-        if self.__ROM_KEY in game_data:
-            result = os.path.join(
-                self._folder_path,
-                self.__PLATFORM_DICT_INV.get(platform, ''),
-                game_data[self.__ROM_KEY][2:].replace('/', '\\')
-            )
+        # Check that rom file exists
+        if not FileHelper.is_file_exists(result):
+            return None
 
         return result
 
-    def retrieve_game_info(self, platform: Platform, game: str) -> str:
+    def retrieve_game_info(self, platform: Platform, game_item: dict) -> str:
         """Retrieve game info"""
 
         # Initialize result
@@ -189,12 +202,46 @@ class SkraperManager(AbstractManager):
             ),
             tag=self.__TAG_GAME,
             criteria={
-                self.__TAG_NAME: game
+                self.__TAG_NAME: game_item[Constants.UI_TABLE_KEY_COL_NAME]
             }
         )
 
-        result = '\n'.join(
-            line for line in game_data.splitlines() if self.__FILE_PREFIX not in line
-        )
+        # Filter out lines containing the file prefix
+        lines = [
+            line for line in game_data.splitlines()
+            if self.__FILE_PREFIX not in line and line.strip() != ""
+        ]
+
+        # Add 2 spaces to the first line if any lines exist
+        if lines:
+            lines[0] = '  ' + lines[0]
+
+        result = '\n'.join(lines)
 
         return result
+
+    def uninstall_game(self, platform: Platform, game_item: dict) -> bool:
+        """Uninstall game"""
+
+        print(platform)
+        print(game_item)
+
+        return False
+
+    def install_game(
+        self,
+        platform: Platform,
+        game_item: dict,
+        media_files: dict[Media, str],
+        game_info_files: dict[Software, str],
+        rom_file: str
+    ) -> bool:
+        """Install game with the specified media files, game info files and rom file"""
+
+        print(platform)
+        print(game_item)
+        print(media_files)
+        print(game_info_files)
+        print(rom_file)
+
+        return False

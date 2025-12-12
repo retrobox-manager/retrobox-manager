@@ -126,15 +126,13 @@ class UITable:
 
         # Set columns size
         for column_id in columns_ids:
-            width = 100
-            anchor = tk.CENTER
-            stretch = False
+            width = 200
+            anchor = tk.W
+            stretch = True
             if column_id == Constants.UI_TABLE_KEY_COL_SELECTION:
                 width = 20
-            elif column_id == Constants.UI_TABLE_KEY_COL_NAME:
-                width = 200
-                anchor = tk.W
-                stretch = True
+                anchor = tk.CENTER
+                stretch = False
             self.__tree.column(
                 column_id,
                 width=width,

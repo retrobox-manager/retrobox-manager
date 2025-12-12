@@ -3,6 +3,7 @@
 
 from executor.abstract_executor import AbstractExecutor
 from executor.games.export.export_games_executor import ExportGamesExecutor
+from executor.games.install.install_games_executor import InstallGamesExecutor
 from libraries.constants.constants import Action, Category
 from libraries.context.context import Context
 
@@ -18,5 +19,7 @@ class ExecutorFactory:
             match(Context.get_selected_action()):
                 case Action.EXPORT:
                     return ExportGamesExecutor()
+                case Action.INSTALL:
+                    return InstallGamesExecutor()
 
         return None

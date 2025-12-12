@@ -3,6 +3,7 @@
 
 import os
 import fnmatch
+from pathlib import Path
 import shutil
 
 from libraries.context.context import Context
@@ -81,6 +82,11 @@ class FileHelper:
         folder_path: str
     ):
         """List sub directories for the specified folder"""
+        if not FileHelper.is_folder_exists(
+            folder_path=folder_path
+        ):
+            return []
+
         return os.listdir(folder_path)
 
     @staticmethod
@@ -116,7 +122,9 @@ class FileHelper:
                     result.append(relative_path)
             # Try to find files
             for file_path in files:
-                if file_path == file_name or fnmatch.fnmatch(file_path, f'{file_name}.*'):
+                if file_path == file_name or \
+                        FileHelper.retrieve_file_basename(file_path) == file_name or \
+                        fnmatch.fnmatch(file_path, f'{file_name}.*'):
                     full_path = os.path.join(root, file_path)
                     relative_path = os.path.relpath(full_path, folder_path)
                     if file_path == 'Thumbs.db':
@@ -338,10 +346,32 @@ class FileHelper:
         os.startfile(folder_path)
 
     @staticmethod
+    def retrieve_file_extension(
+        file_path: str,
+    ) -> str:
+        """Retrieve the file's extension"""
+        return "".join(Path(file_path).suffixes)
+
+    @staticmethod
+    def retrieve_file_basename(
+        file_path: str,
+    ) -> str:
+        """Retrieve the file's basename"""
+        return Path(file_path).stem
+
+    @staticmethod
+    def retrieve_file_name(
+        file_path: str,
+    ) -> str:
+        """Retrieve the file's name"""
+        return Path(file_path).name
+
+    @staticmethod
     def delete_file(
-        file_path: str
+        file_path: str,
+        delete_all_extensions: bool = False
     ) -> bool:
-        """Delete a file"""
+        """Delete a file and eeventullay all its extensions"""
         if not FileHelper.is_file_exists(
             file_path=file_path
         ):
@@ -350,21 +380,42 @@ class FileHelper:
         if Context.is_simulated():
             LoggingHelper.log_info(
                 message=Context.get_text(
-                    'delete_file_simulation',
+                    'delete_file',
                     file=str(file_path)
                 )
             )
             return True
 
-        LoggingHelper.log_info(
-            message=Context.get_text(
-                'delete_file_in_progress',
-                file=str(file_path)
+        # If only 1 file to delete
+        if not delete_all_extensions:
+            LoggingHelper.log_info(
+                message=Context.get_text(
+                    'delete_file_in_progress',
+                    file=str(file_path)
+                )
             )
-        )
-        os.remove(file_path)
 
-        return True
+            os.remove(file_path)
+            return True
+
+        # Delete recursively files with the same basename
+        deleted_files_count = 0
+        parent_path = Path(file_path).parent
+        for relative_path in FileHelper.list_relative_paths(
+            folder_path=parent_path,
+            file_name=FileHelper.retrieve_file_basename(file_path),
+            error_if_not_found=False
+        ):
+            if FileHelper.delete_file(
+                file_path=os.path.join(
+                    parent_path,
+                    relative_path
+                ),
+                delete_all_extensions=False
+            ):
+                deleted_files_count += 1
+
+        return deleted_files_count > 0
 
     @staticmethod
     def read_file(

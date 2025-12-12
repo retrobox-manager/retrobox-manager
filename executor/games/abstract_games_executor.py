@@ -12,8 +12,8 @@ from manager.manager_factory import ManagerFactory
 class AbstractGamesExecutor(AbstractExecutor):
     """Abstract Games Executor"""
 
-    _ROM_FOLDER_NAME = 'rom'
-    _MEDIA_FOLDER_NAME = 'media'
+    ROM_FOLDER_NAME = 'rom'
+    MEDIA_FOLDER_NAME = 'media'
 
     def __init__(
         self

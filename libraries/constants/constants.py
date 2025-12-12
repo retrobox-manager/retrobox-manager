@@ -79,6 +79,7 @@ class Constants:
     UI_TABLE_KEY_COL_SELECTION = 'column_title_selection'
     UI_TABLE_KEY_COL_ID = 'column_title_id'
     UI_TABLE_KEY_COL_NAME = 'column_title_name'
+    UI_TABLE_KEY_COL_ROM = 'column_title_rom'
     UI_TABLE_KEY_COLOR = 'color'
 
     # Constants for setup

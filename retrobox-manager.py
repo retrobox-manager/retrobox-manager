@@ -9,15 +9,19 @@ from tkinter import ttk
 from dialogs.about.about_dialog import AboutDialog
 from dialogs.execute.execute_dialog import ExecuteDialog
 from dialogs.setup.setup_dialog import SetupDialog
+from executor.games.abstract_games_executor import AbstractGamesExecutor
 from manager.manager_factory import ManagerFactory
 from libraries.constants.constants import Action, Category, Constants, Platform, Software
 from libraries.context.context import Context
+from libraries.file.file_helper import FileHelper
 from libraries.text.text_helper import TextHelper
 from libraries.ui.ui_helper import UIHelper
 from libraries.ui.ui_table import UITable
 
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
 
 
 class ApplicationWindow:
@@ -41,9 +45,12 @@ class ApplicationWindow:
         # If source is category
         if event.widget == self.combo_category:
             # Update context from selection
-            Context.set_selected_category(
-                list(Category)[self.combo_category.current()]
-            )
+            Context.set_selected_category(None)
+            for category in Category:
+                if Context.get_text(
+                    text_id=category.value
+                ) == self.combo_category.get():
+                    Context.set_selected_category(category)
 
             # Set title for table
             self.table_frame.config(
@@ -115,9 +122,15 @@ class ApplicationWindow:
         # If source is action
         elif event.widget == self.combo_action:
             # Update context from selection
-            Context.set_selected_action(
-                list(Action)[self.combo_action.current()]
-            )
+            Context.set_selected_action(None)
+            for action in Action:
+                if Context.get_text(
+                    text_id=action.value,
+                    category=Context.get_text(
+                        Context.get_selected_category().value
+                    )
+                ) == self.combo_action.get():
+                    Context.set_selected_action(action)
 
             # Select first software
             self.combo_software.current(0)
@@ -126,9 +139,10 @@ class ApplicationWindow:
         # If source is software
         elif event.widget == self.combo_software:
             # Update context from selection
-            Context.set_selected_software(
-                list(Software)[self.combo_software.current()]
-            )
+            Context.set_selected_software(None)
+            for software in Software:
+                if software.value == self.combo_software.get():
+                    Context.set_selected_software(software)
 
             # Update platforms
             values = []
@@ -151,9 +165,10 @@ class ApplicationWindow:
         # If source is platform
         elif event.widget == self.combo_platform:
             # Update context from selection
-            Context.set_selected_platform(
-                list(Platform)[self.combo_platform.current()]
-            )
+            Context.set_selected_platform(None)
+            for platform in Platform:
+                if platform.value == self.combo_platform.get():
+                    Context.set_selected_platform(platform)
 
             # Update UI
             self.__update_ui()
@@ -163,28 +178,71 @@ class ApplicationWindow:
 
         # Create rows for table
         table_rows = []
-        match(Context.get_selected_action()):
-            case Action.EXPORT:
-                games = ManagerFactory.create(
-                    software=Context.get_selected_software()
-                ).list_games(
-                    platform=Context.get_selected_platform()
-                )
-
-                for game in games:
-                    # Build row
-                    row = {}
-                    row[Constants.UI_TABLE_KEY_COL_SELECTION] = False
-                    row[Constants.UI_TABLE_KEY_COL_ID] = TextHelper.sanitize(
-                        game
+        if Context.get_selected_category() == Category.GAMES:
+            match(Context.get_selected_action()):
+                case Action.EXPORT:
+                    games = ManagerFactory.create(
+                        software=Context.get_selected_software()
+                    ).list_games_with_rom(
+                        platform=Context.get_selected_platform()
                     )
-                    row[Constants.UI_TABLE_KEY_COL_NAME] = game
 
-                    # Retrieve color
-                    row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
+                    for rom, name in games.items():
+                        # Build row
+                        row = {}
+                        row[Constants.UI_TABLE_KEY_COL_SELECTION] = False
+                        row[Constants.UI_TABLE_KEY_COL_ID] = FileHelper.retrieve_file_basename(
+                            rom
+                        )
+                        row[Constants.UI_TABLE_KEY_COL_NAME] = name
+                        row[Constants.UI_TABLE_KEY_COL_ROM] = rom
 
-                    # Append row
-                    table_rows.append(row)
+                        # Retrieve color
+                        row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
+
+                        # Append row
+                        table_rows.append(row)
+
+                case Action.INSTALL:
+                    games = FileHelper.list_sub_directories(
+                        folder_path=os.path.join(
+                            Context.get_games_path(),
+                            Context.get_selected_platform().value
+                        )
+                    )
+
+                    for game in games:
+                        # Retrieve the rom file
+                        roms_files = FileHelper.list_relative_paths(
+                            folder_path=os.path.join(
+                                Context.get_games_path(),
+                                Context.get_selected_platform().value,
+                                game,
+                                AbstractGamesExecutor.ROM_FOLDER_NAME
+                            ),
+                            file_name=game,
+                            error_if_not_found=False
+                        )
+
+                        if len(roms_files) == 0:
+                            continue
+
+                        # Build row
+                        row = {}
+                        row[Constants.UI_TABLE_KEY_COL_SELECTION] = False
+                        row[Constants.UI_TABLE_KEY_COL_ID] = FileHelper.retrieve_file_basename(
+                            roms_files[0]
+                        )
+                        row[Constants.UI_TABLE_KEY_COL_NAME] = game
+                        row[Constants.UI_TABLE_KEY_COL_ROM] = FileHelper.retrieve_file_name(
+                            roms_files[0]
+                        )
+
+                        # Retrieve color
+                        row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
+
+                        # Append row
+                        table_rows.append(row)
 
         # Sort rows depending on UI_TABLE_KEY_COLOR (desc) and Constants.UI_TABLE_KEY_COL_NAME (asc)
         sorted_rows = sorted(
