@@ -1,18 +1,32 @@
 #!/usr/bin/python3
 """XML Helper"""
 
-import os
 import xml.etree.ElementTree as ET
+
+from libraries.file.file_helper import FileHelper
 
 
 class XmlHelper:
     """Class to help usage of XML"""
 
     @staticmethod
+    def _matches_criteria(node: ET.Element, criteria: dict[str, str]) -> bool:
+        """Check if node matches all criteria"""
+        for field, expected in criteria.items():
+            field_node = node.find(field)
+            if field_node is None or field_node.text != expected:
+                return False
+        return True
+
+    @staticmethod
     def print_all_tags(
         xml_file_path: str
     ):
         """Show content"""
+
+        # Do nothing if XML file doesn't exist
+        if not FileHelper.is_file_exists(xml_file_path):
+            return
 
         # Load tree from XML file
         tree = ET.parse(xml_file_path)
@@ -25,95 +39,79 @@ class XmlHelper:
     @staticmethod
     def list_tag_values(
         xml_file_path: str,
-        tag: str,
-        parent_tag: str | None = None
+        parent_tag: str,
+        tag: str
     ) -> list[str]:
         """List values for a tag from a XML file"""
 
         # Initialize result
         result = []
 
-        # Load tree from XML file
-        tree = ET.parse(xml_file_path)
-        root = tree.getroot()
-
-        # List values for the specified tag
-        if parent_tag is None:
-            result = [elem.text for elem in root.iter(tag)]
-        else:
-            for node in root.findall(f'.//{parent_tag}'):
-                found_tag = node.find(tag)
-                if found_tag is not None:
-                    result.append(found_tag.text)
-
-        return result
-
-    @staticmethod
-    def list_tag_data(
-        xml_file_path: str,
-        tag: str,
-        parent_tag: str | None = None
-    ) -> list[dict[str, str]]:
-        """List data for a tag from a XML file"""
-
-        # Initialize result
-        result = []
+        # Do nothing if XML file doesn't exist
+        if not FileHelper.is_file_exists(xml_file_path):
+            return result
 
         # Load tree from XML file
         tree = ET.parse(xml_file_path)
         root = tree.getroot()
 
-        # List values for the specified tag
-        if parent_tag is None:
-            for node in root.iter(tag):
-                result.append(
-                    {child.tag: child.text for child in node}
-                )
+        # Retrieve parents
+        if parent_tag == root.tag:
+            parents = [root]
         else:
-            for node in root.findall(f'.//{parent_tag}'):
-                found_tag = node.find(tag)
-                if found_tag is not None:
-                    result.append(
-                        {child.tag: child.text for child in found_tag}
-                    )
+            parents = root.findall(f'.//{parent_tag}')
+
+        # For each parent
+        for parent in parents:
+            # For each parent's node
+            for node in list(parent):
+                # If bad tag, continue
+                if node.tag != tag:
+                    continue
+
+                # Add node's text
+                result.append(node.text)
 
         return result
 
     @staticmethod
     def get_tag_data(
         xml_file_path: str,
+        parent_tag: str,
         tag: str,
-        criteria: dict[str, str],
-        parent_tag: str | None = None
+        criteria: dict[str, str]
     ) -> list[dict[str, str]]:
         """Return the data dict for the first tag matching the criteria"""
+
+        # Do nothing if XML file doesn't exist
+        if not FileHelper.is_file_exists(xml_file_path):
+            return {}
 
         # Load tree from XML file
         tree = ET.parse(xml_file_path)
         root = tree.getroot()
 
-        # Select nodes depending on parent_tag
-        if parent_tag is None:
-            nodes = root.iter(tag)
+        # Load tree from XML file
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
+
+        # Retrieve parents
+        if parent_tag == root.tag:
+            parents = [root]
         else:
-            nodes = []
-            for node in root.findall(f'.//{parent_tag}'):
-                found_tag = node.find(tag)
-                if found_tag is not None:
-                    nodes.append(found_tag)
+            parents = root.findall(f'.//{parent_tag}')
 
-        # Search for a node matching all criteria
-        for node in nodes:
-            is_match = True
-            for field, expected in criteria.items():
-                field_node = node.find(field)
-                if field_node is None or field_node.text != expected:
-                    is_match = False
-                    break
+        # For each parent
+        for parent in parents:
+            # For each parent's node
+            for node in list(parent):
+                # If bad tag, continue
+                if node.tag != tag:
+                    continue
 
-            if is_match:
-                # Return dict of all fields
-                return {child.tag: child.text for child in node}
+                # If matches criteria, return dict of all fields
+                if XmlHelper._matches_criteria(node, criteria):
+                    return {child.tag: child.text for child in node}
 
         # No match
         return {}
@@ -121,95 +119,83 @@ class XmlHelper:
     @staticmethod
     def get_tag_content(
         xml_file_path: str,
+        parent_tag: str,
         tag: str,
-        criteria: dict[str, str],
-        parent_tag: str | None = None
+        criteria: dict[str, str]
     ) -> str:
         """Return the content for the first tag matching the criteria"""
+
+        # Do nothing if XML file doesn't exist
+        if not FileHelper.is_file_exists(xml_file_path):
+            return None
 
         # Load tree from XML file
         tree = ET.parse(xml_file_path)
         root = tree.getroot()
 
-        # Select nodes depending on parent_tag
-        if parent_tag is None:
-            nodes = root.iter(tag)
+        # Retrieve parents
+        if parent_tag == root.tag:
+            parents = [root]
         else:
-            nodes = []
-            for node in root.findall(f'.//{parent_tag}'):
-                found_tag = node.find(tag)
-                if found_tag is not None:
-                    nodes.append(found_tag)
+            parents = root.findall(f'.//{parent_tag}')
 
-        # Search for a node matching all criteria
-        for node in nodes:
-            is_match = True
-            for field, expected in criteria.items():
-                field_node = node.find(field)
-                if field_node is None or field_node.text != expected:
-                    is_match = False
-                    break
+        # For each parent
+        for parent in parents:
+            # For each parent's node
+            for node in list(parent):
+                # If bad tag, continue
+                if node.tag != tag:
+                    continue
 
-            if is_match:
-                # Return dict of all fields
-                return ET.tostring(node, encoding="unicode")
+                # If matches criteria, return content of all fields
+                if XmlHelper._matches_criteria(node, criteria):
+                    return ET.tostring(node, encoding="unicode")
 
         # No match
         return None
 
     @staticmethod
-    def create_xml_from_list(
+    def delete_tag(
         xml_file_path: str,
-        data: list[dict[str, str]],
-        root_tag: str,
-        item_tag: str,
-    ):
-        """Generate an XML from a list of dictionaries"""
+        parent_tag: str,
+        tag: str,
+        criteria: dict[str, str]
+    ) -> bool:
+        """Delete the first tag matching the criteria"""
 
-        root = ET.Element(root_tag)
+        # Do nothing if XML file doesn't exist
+        if not FileHelper.is_file_exists(xml_file_path):
+            return False
 
-        for item_dict in data:
-            item_element = ET.SubElement(root, item_tag)
+        # Load tree from XML file
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
 
-            for key, value in item_dict.items():
-                child = ET.SubElement(item_element, key)
-                child.text = value
+        # Retrieve parents
+        if parent_tag == root.tag:
+            parents = [root]
+        else:
+            parents = root.findall(f'.//{parent_tag}')
 
-        # Good indentation
-        ET.indent(root, space="    ")
+        # For each parent
+        for parent in parents:
+            # For each parent's node
+            for node in list(parent):
+                # If bad tag, continue
+                if node.tag != tag:
+                    continue
 
-        # Load tree from node
-        tree = ET.ElementTree(root)
+                # If matches criteria, delete the tag in XML file
+                if XmlHelper._matches_criteria(node, criteria):
+                    node.tail = None
+                    parent.remove(node)
+                    ET.indent(tree, space="  ")
+                    tree.write(
+                        xml_file_path,
+                        encoding="utf-8",
+                        xml_declaration=True
+                    )
+                    return True
 
-        # Make parent directories
-        os.makedirs(
-            os.path.dirname(xml_file_path),
-            exist_ok=True
-        )
-
-        # Write tree in XML file
-        tree.write(
-            xml_file_path,
-            encoding="utf-8",
-            xml_declaration=True
-        )
-
-    # @staticmethod
-    # def write_node(
-    #     xml_file_path: str,
-    #     node: ET.Element
-    # ):
-    #     """Write a node in a XML file"""
-
-    #     # Load tree from node
-    #     tree = ET.ElementTree(node)
-
-    #     # Make parent directories
-    #     os.makedirs(os.path.dirname(xml_file_path), exist_ok=True)
-
-    #     # Write tree in XML file
-    #     tree.write(
-    #         xml_file_path,
-    #         encoding="utf-8",
-    #         xml_declaration=True
-    #     )
+        # No match
+        return False

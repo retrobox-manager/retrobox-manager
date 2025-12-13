@@ -133,6 +133,13 @@ class UITable:
                 width = 20
                 anchor = tk.CENTER
                 stretch = False
+            elif column_id not in [
+                Constants.UI_TABLE_KEY_COL_NAME,
+                Constants.UI_TABLE_KEY_COL_ROM
+            ]:
+                width = 100
+                anchor = tk.CENTER
+                stretch = False
             self.__tree.column(
                 column_id,
                 width=width,

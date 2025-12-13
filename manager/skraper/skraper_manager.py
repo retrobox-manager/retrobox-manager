@@ -16,13 +16,18 @@ class SkraperManager(AbstractManager):
 
     __PATH_GAMELIST = 'gamelist.xml'
 
+    __TAG_GAMES = 'gameList'
     __TAG_GAME = 'game'
     __TAG_NAME = 'name'
     __TAG_PATH = 'path'
 
-    __FILE_PREFIX = './'
-
     __MEDIA_PATH = 'media'
+
+    __FILE_PREFIX = './'
+    __PATH_SEPARATOR = '/'
+
+    __PARENT_PREFIX = '  '
+    __CHILD_PREFIX = '    '
 
     __MEDIA_DICT = {
         'box2dfront': Media.BOX_2D_FRONT,
@@ -49,11 +54,21 @@ class SkraperManager(AbstractManager):
     }
 
     __PLATFORM_DICT = {
+        'xbox360': Platform.MICROSOFT_XBOX360,
+        'n64': Platform.NINTENDO_64,
+        'gamecube': Platform.NINTENDO_GAME_CUBE,
+        'dreamcast': Platform.SEGA_DREAMCAST,
         'mastersystem': Platform.SEGA_MASTERSYSTEM,
-        'megadrive': Platform.SEGA_MEGADRIVE
+        'megadrive': Platform.SEGA_MEGADRIVE,
+        'ps2': Platform.SONY_PLAYSTATION_2
     }
 
     __PLATFORM_DICT_INV = {v: k for k, v in __PLATFORM_DICT.items()}
+
+    __SOFTWARE_GAME_INFO_PRIORITY = [
+        Software.SKRAPER,
+        Software.BATOCERA
+    ]
 
     def __retrieve_game_list_xml_path(
         self,
@@ -66,6 +81,14 @@ class SkraperManager(AbstractManager):
             self.__PLATFORM_DICT_INV.get(platform, ''),
             self.__PATH_GAMELIST
         )
+
+    def __build_game_criteria(self, game_item: dict) -> dict[str, str]:
+        """Build criteria to find a game"""
+
+        return {
+            self.__TAG_PATH: self.__FILE_PREFIX +
+            game_item[Constants.UI_TABLE_KEY_COL_ROM]
+        }
 
     def get_enum(self) -> Software:
         """Get enum"""
@@ -130,6 +153,15 @@ class SkraperManager(AbstractManager):
                     result[FileHelper.retrieve_file_name(rom_file)] = tag_name_values[
                         tag_path_values.index(rom_path)
                     ]
+        else:
+            # List roms
+            for rom_file in FileHelper.list_sub_directories(
+                folder_path=os.path.join(
+                    self._folder_path,
+                    self.__PLATFORM_DICT_INV.get(platform, ''),
+                )
+            ):
+                result[rom_file] = ''
 
         return result
 
@@ -200,11 +232,13 @@ class SkraperManager(AbstractManager):
             xml_file_path=self.__retrieve_game_list_xml_path(
                 platform=platform
             ),
+            parent_tag=self.__TAG_GAMES,
             tag=self.__TAG_GAME,
-            criteria={
-                self.__TAG_NAME: game_item[Constants.UI_TABLE_KEY_COL_NAME]
-            }
+            criteria=self.__build_game_criteria(game_item)
         )
+
+        if game_data is None:
+            return result
 
         # Filter out lines containing the file prefix
         lines = [
@@ -223,10 +257,33 @@ class SkraperManager(AbstractManager):
     def uninstall_game(self, platform: Platform, game_item: dict) -> bool:
         """Uninstall game"""
 
-        print(platform)
-        print(game_item)
+        # Delete media files
+        media_files = self.retrieve_media_files(
+            platform=platform,
+            game_item=game_item
+        )
+        for media_file in media_files.values():
+            FileHelper.delete_file(
+                file_path=media_file
+            )
 
-        return False
+        # Delete rom file
+        FileHelper.delete_file(
+            file_path=self.retrieve_rom_file(
+                platform=platform,
+                game_item=game_item
+            )
+        )
+
+        # Delete tag for the game
+        return XmlHelper.delete_tag(
+            xml_file_path=self.__retrieve_game_list_xml_path(
+                platform=platform
+            ),
+            parent_tag=self.__TAG_GAMES,
+            tag=self.__TAG_GAME,
+            criteria=self.__build_game_criteria(game_item)
+        )
 
     def install_game(
         self,
@@ -238,10 +295,132 @@ class SkraperManager(AbstractManager):
     ) -> bool:
         """Install game with the specified media files, game info files and rom file"""
 
-        print(platform)
-        print(game_item)
-        print(media_files)
-        print(game_info_files)
-        print(rom_file)
+        # Uninstall before installing
+        self.uninstall_game(
+            platform=platform,
+            game_item=game_item
+        )
 
-        return False
+        # Initialize fields to add
+        fields_to_add = {}
+
+        # Copy the rom
+        skraper_rom_file = os.path.join(
+            self._folder_path,
+            self.__PLATFORM_DICT_INV.get(platform, ''),
+            FileHelper.retrieve_file_name(rom_file)
+        )
+        FileHelper.copy_file(
+            source_file_path=rom_file,
+            destination_file_path=skraper_rom_file
+        )
+
+        # Add field for the rom
+        fields_to_add[self.__TAG_PATH] = self.__FILE_PREFIX
+        fields_to_add[self.__TAG_PATH] += FileHelper.retrieve_file_name(
+            rom_file
+        )
+
+        # Retrieve better game info depending on a priority
+        better_software = None
+        better_game_info = None
+        for software in self.__SOFTWARE_GAME_INFO_PRIORITY:
+            game_info_file = game_info_files.get(software, None)
+            if game_info_file is not None:
+                better_software = software
+                better_game_info = FileHelper.read_file(game_info_file)
+                break
+
+        # If no game info found, finish the installation without info and media
+        if better_game_info is None:
+            return True
+
+        # Install media files
+        skraper_media_files = {}
+        for key, media in self.__MEDIA_DICT.items():
+            media_file = media_files.get(media, None)
+            if media_file is None:
+                continue
+
+            # Retrieve media's folder
+            media_folder = 'images'
+            if media == Media.MANUAL:
+                media_folder = 'manuals'
+            elif media == Media.VIDEO:
+                media_folder = 'videos'
+
+            # Copy media file in software
+            file_name = FileHelper.retrieve_file_basename(skraper_rom_file)
+            file_name += FileHelper.retrieve_file_extension(media_file)
+            skraper_media_files[media] = os.path.join(
+                self._folder_path,
+                self.__PLATFORM_DICT_INV.get(platform, ''),
+                self.__MEDIA_PATH,
+                key,
+                file_name
+            )
+            FileHelper.copy_file(
+                source_file_path=media_file,
+                destination_file_path=skraper_media_files[media]
+            )
+
+            # Add field for the media
+            fields_to_add[key] = self.__FILE_PREFIX
+            fields_to_add[key] += media_folder
+            fields_to_add[key] += self.__PATH_SEPARATOR
+            fields_to_add[key] += file_name
+
+        # Normalize lines
+        lines = []
+        for line in better_game_info.splitlines():
+            if self.__FILE_PREFIX in line or line.strip() == "":
+                continue
+            stripped = line.lstrip()
+            if stripped.startswith(f'<{self.__TAG_GAME}') or stripped.startswith(f'</{self.__TAG_GAME}'):
+                lines.append(self.__PARENT_PREFIX + stripped)
+            else:
+                lines.append(self.__CHILD_PREFIX + stripped)
+
+        # Build new tags
+        new_tags = [
+            f"{self.__CHILD_PREFIX}<{field_key}>{field_value}</{field_key}>"
+            for field_key, field_value in fields_to_add.items()
+        ]
+
+        # Insert new tags before the last line
+        if len(lines) >= 1:
+            lines[-1:-1] = new_tags
+
+        better_game_info = "\n".join(lines)
+
+        # Add the game info before </gameList>
+        game_list_xml_path = self.__retrieve_game_list_xml_path(
+            platform=platform
+        )
+        game_list_xml_content = FileHelper.read_file(game_list_xml_path)
+
+        if len(game_list_xml_content) == 0:
+            # Build an empty XML file if XML doesn't exist
+            game_list_xml_content = f"""<?xml version="1.0"?>
+<gameList>
+{self.__PARENT_PREFIX}<provider>
+{self.__CHILD_PREFIX}<System>{platform.value}</System>
+{self.__CHILD_PREFIX}<software>{better_software.value}</software>
+{self.__PARENT_PREFIX}</provider>
+</gameList>
+"""
+
+        closing_tag = f"</{self.__TAG_GAMES}>"
+        if closing_tag not in game_list_xml_content:
+            raise Exception(f'{game_list_xml_path} is inconsistent!')
+
+        game_list_xml_content = game_list_xml_content.replace(
+            closing_tag,
+            f"{better_game_info}\n{closing_tag}",
+            1
+        )
+
+        return FileHelper.write_file(
+            file_path=game_list_xml_path,
+            content=game_list_xml_content
+        )

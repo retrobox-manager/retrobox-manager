@@ -19,6 +19,7 @@ class Action(Enum):
     EXPORT = 'action_export'
     COPY = 'action_copy'
     EDIT = 'action_edit'
+    DELETE = 'action_delete'
 
 
 class Software(Enum):
@@ -33,8 +34,13 @@ class Software(Enum):
 class Platform(Enum):
     """Platform"""
 
+    MICROSOFT_XBOX360 = 'Microsoft Xbox 360'
+    NINTENDO_64 = 'Nintendo 64'
+    NINTENDO_GAME_CUBE = 'Nintendo GameCube'
+    SEGA_DREAMCAST = 'Sega Dreamcast'
     SEGA_MASTERSYSTEM = 'Sega Master System'
     SEGA_MEGADRIVE = 'Sega Megadrive'
+    SONY_PLAYSTATION_2 = 'Sony Playstation 2'
 
 
 class Media(Enum):
@@ -80,6 +86,7 @@ class Constants:
     UI_TABLE_KEY_COL_ID = 'column_title_id'
     UI_TABLE_KEY_COL_NAME = 'column_title_name'
     UI_TABLE_KEY_COL_ROM = 'column_title_rom'
+    UI_TABLE_KEY_COL_UNIQUE = 'column_title_unique'
     UI_TABLE_KEY_COLOR = 'color'
 
     # Constants for setup

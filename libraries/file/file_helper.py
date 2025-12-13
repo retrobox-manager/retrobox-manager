@@ -52,15 +52,18 @@ class FileHelper:
     @staticmethod
     def is_file_exists(
         file_path: str
-    ):
+    ) -> bool:
         """Check if a file exists"""
+        if file_path is None:
+            return False
+
         return os.path.isfile(file_path)
 
     @staticmethod
     def compare_files(
         file1_path: str,
         file2_path: str
-    ):
+    ) -> bool:
         """Copy a file from source to destination"""
         if not FileHelper.is_file_exists(
             file_path=file1_path
@@ -80,7 +83,7 @@ class FileHelper:
     @staticmethod
     def list_sub_directories(
         folder_path: str
-    ):
+    ) -> list[str]:
         """List sub directories for the specified folder"""
         if not FileHelper.is_folder_exists(
             folder_path=folder_path
@@ -94,16 +97,11 @@ class FileHelper:
         folder_path: str,
         file_name: str,
         error_if_not_found=True
-    ):
+    ) -> list[str]:
         """List recursively relative paths for the specified name"""
         result = []
         if not os.path.isdir(folder_path):
-            LoggingHelper.log_warning(
-                message=Context.get_text(
-                    'warning_not_found_folder',
-                    folder=str(folder_path)
-                )
-            )
+            return []
         for root, dirs, files in os.walk(folder_path):
             # If a folder exists with the name of the file, add sub files
             if file_name in dirs:

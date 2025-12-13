@@ -1,5 +1,8 @@
-R0.3.0 - 12/??/2025
+R0.3.0 - 12/13/2025
 - feat(export_games): Add action to export games
+- feat(install_games): Add action to install games
+- feat(uninstall_games): Add action to uninstall games
+- feat(delete_games): Add action to delete games
 
 R0.2.0 - 12/01/2025
 - feat(list_games): Add function to list games

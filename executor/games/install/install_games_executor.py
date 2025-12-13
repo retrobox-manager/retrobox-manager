@@ -26,7 +26,7 @@ class InstallGamesExecutor(AbstractGamesExecutor):
             folder_path = os.path.join(
                 Context.get_games_path(),
                 Context.get_selected_platform().value,
-                item[Constants.UI_TABLE_KEY_COL_NAME],
+                item[Constants.UI_TABLE_KEY_COL_ID],
                 self.MEDIA_FOLDER_NAME
             )
             relative_paths = FileHelper.list_relative_paths(
@@ -50,7 +50,7 @@ class InstallGamesExecutor(AbstractGamesExecutor):
             file_path = os.path.join(
                 Context.get_games_path(),
                 Context.get_selected_platform().value,
-                item[Constants.UI_TABLE_KEY_COL_NAME],
+                item[Constants.UI_TABLE_KEY_COL_ID],
                 f'{software_manager.get_id()}{Constants.XML_EXTENSION}'
             )
             if FileHelper.is_file_exists(
@@ -63,7 +63,7 @@ class InstallGamesExecutor(AbstractGamesExecutor):
         folder_path = os.path.join(
             Context.get_games_path(),
             Context.get_selected_platform().value,
-            item[Constants.UI_TABLE_KEY_COL_NAME],
+            item[Constants.UI_TABLE_KEY_COL_ID],
             self.ROM_FOLDER_NAME
         )
         relative_paths = FileHelper.list_relative_paths(
@@ -76,12 +76,6 @@ class InstallGamesExecutor(AbstractGamesExecutor):
                 folder_path,
                 relative_paths[0]
             )
-
-        # Uninstall game
-        self._software_manager.uninstall_game(
-            platform=Context.get_selected_platform(),
-            game_item=item
-        )
 
         # Install game
         self._software_manager.install_game(

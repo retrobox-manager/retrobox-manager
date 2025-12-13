@@ -2,8 +2,10 @@
 """Executor Factory"""
 
 from executor.abstract_executor import AbstractExecutor
+from executor.games.delete.delete_games_executor import DeleteGamesExecutor
 from executor.games.export.export_games_executor import ExportGamesExecutor
 from executor.games.install.install_games_executor import InstallGamesExecutor
+from executor.games.uninstall.uninstall_games_executor import UninstallGamesExecutor
 from libraries.constants.constants import Action, Category
 from libraries.context.context import Context
 
@@ -21,5 +23,9 @@ class ExecutorFactory:
                     return ExportGamesExecutor()
                 case Action.INSTALL:
                     return InstallGamesExecutor()
+                case Action.UNINSTALL:
+                    return UninstallGamesExecutor()
+                case Action.DELETE:
+                    return DeleteGamesExecutor()
 
         return None

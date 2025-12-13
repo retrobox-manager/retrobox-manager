@@ -82,6 +82,10 @@ class ExportGamesExecutor(AbstractGamesExecutor):
             game_item=item
         )
 
+        # If no game info found, finish the export
+        if len(game_info) == 0:
+            return
+
         # Write content in a XML file
         FileHelper.write_file(
             file_path=os.path.join(

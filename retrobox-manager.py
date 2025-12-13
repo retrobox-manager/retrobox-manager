@@ -14,7 +14,6 @@ from manager.manager_factory import ManagerFactory
 from libraries.constants.constants import Action, Category, Constants, Platform, Software
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
-from libraries.text.text_helper import TextHelper
 from libraries.ui.ui_helper import UIHelper
 from libraries.ui.ui_table import UITable
 
@@ -59,31 +58,6 @@ class ApplicationWindow:
                 )
             )
 
-            # Show/Hide combos depending on selected category
-            if Context.get_selected_category() == Category.GAMES:
-                self.label_software.pack(
-                    side=tk.LEFT,
-                    padx=Constants.UI_PAD_SMALL
-                )
-                self.combo_software.pack(
-                    side=tk.LEFT,
-                    padx=Constants.UI_PAD_SMALL
-                )
-                self.label_platform.pack(
-                    side=tk.LEFT,
-                    padx=Constants.UI_PAD_SMALL
-                )
-                self.combo_platform.pack(
-                    side=tk.LEFT,
-                    padx=Constants.UI_PAD_SMALL
-                )
-                self.combo_software.current(0)
-            else:
-                self.label_software.pack_forget()
-                self.combo_software.pack_forget()
-                self.label_platform.pack_forget()
-                self.combo_platform.pack_forget()
-
             # Update actions depending on selected category
             available_actions = []
             match(Context.get_selected_category()):
@@ -91,7 +65,8 @@ class ApplicationWindow:
                     available_actions = [
                         Action.EXPORT,
                         Action.INSTALL,
-                        Action.UNINSTALL
+                        Action.UNINSTALL,
+                        Action.DELETE
                     ]
 
                 case Category.CONFIGS:
@@ -132,9 +107,35 @@ class ApplicationWindow:
                 ) == self.combo_action.get():
                     Context.set_selected_action(action)
 
-            # Select first software
-            self.combo_software.current(0)
-            self.combo_software.event_generate("<<ComboboxSelected>>")
+            # Show/Hide combos depending on selected category and action
+            self.label_software.pack_forget()
+            self.combo_software.pack_forget()
+            self.label_platform.pack_forget()
+            self.combo_platform.pack_forget()
+            if Context.get_selected_category() == Category.GAMES:
+                if Context.get_selected_action() != Action.DELETE:
+                    self.label_software.pack(
+                        side=tk.LEFT,
+                        padx=Constants.UI_PAD_SMALL
+                    )
+                    self.combo_software.pack(
+                        side=tk.LEFT,
+                        padx=Constants.UI_PAD_SMALL
+                    )
+                self.label_platform.pack(
+                    side=tk.LEFT,
+                    padx=Constants.UI_PAD_SMALL
+                )
+                self.combo_platform.pack(
+                    side=tk.LEFT,
+                    padx=Constants.UI_PAD_SMALL
+                )
+                if Context.get_selected_action() != Action.DELETE:
+                    self.combo_software.current(0)
+                    self.combo_software.event_generate("<<ComboboxSelected>>")
+                else:
+                    self.combo_platform.current(0)
+                    self.combo_platform.event_generate("<<ComboboxSelected>>")
 
         # If source is software
         elif event.widget == self.combo_software:
@@ -154,7 +155,7 @@ class ApplicationWindow:
                 values=values
             )
 
-            # Select first software
+            # Select first platform
             if len(values) > 0:
                 self.combo_platform.current(0)
                 self.combo_platform.event_generate("<<ComboboxSelected>>")
@@ -179,15 +180,57 @@ class ApplicationWindow:
         # Create rows for table
         table_rows = []
         if Context.get_selected_category() == Category.GAMES:
-            match(Context.get_selected_action()):
-                case Action.EXPORT:
-                    games = ManagerFactory.create(
-                        software=Context.get_selected_software()
-                    ).list_games_with_rom(
+            # List games for selected Software
+            selected_software_games = ManagerFactory.create(
+                software=Context.get_selected_software()
+            ).list_games_with_rom(
+                platform=Context.get_selected_platform()
+            )
+
+            # List games for data
+            data_games = {}
+            for game_folder in FileHelper.list_sub_directories(
+                folder_path=os.path.join(
+                    Context.get_games_path(),
+                    Context.get_selected_platform().value
+                )
+            ):
+                # Try to find the rom file
+                rom_files = FileHelper.list_relative_paths(
+                    folder_path=os.path.join(
+                        Context.get_games_path(),
+                        Context.get_selected_platform().value,
+                        game_folder,
+                        AbstractGamesExecutor.ROM_FOLDER_NAME
+                    ),
+                    file_name='*',
+                    error_if_not_found=False
+                )
+
+                if len(rom_files) == 0:
+                    continue
+
+                rom_file = rom_files[0]
+
+                # Try to extract the name from software if possible
+                game_name = FileHelper.retrieve_file_basename(rom_file)
+                for software in Context.list_available_softwares():
+                    software_manager = ManagerFactory.create(software)
+                    software_games = software_manager.list_games_with_rom(
                         platform=Context.get_selected_platform()
                     )
+                    if rom_file not in software_games:
+                        continue
+                    if len(software_games[rom_file]) == 0:
+                        continue
+                    game_name = software_games[rom_file]
+                    break
 
-                    for rom, name in games.items():
+                data_games[FileHelper.retrieve_file_name(rom_file)] = game_name
+
+            match(Context.get_selected_action()):
+                case Action.EXPORT:
+                    for rom, name in selected_software_games.items():
                         # Build row
                         row = {}
                         row[Constants.UI_TABLE_KEY_COL_SELECTION] = False
@@ -197,49 +240,97 @@ class ApplicationWindow:
                         row[Constants.UI_TABLE_KEY_COL_NAME] = name
                         row[Constants.UI_TABLE_KEY_COL_ROM] = rom
 
+                        # Check if unique
+                        row[Constants.UI_TABLE_KEY_COL_UNIQUE] = list(
+                            data_games.values()
+                        ).count(name) == 1
+
                         # Retrieve color
-                        row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
+                        if row[Constants.UI_TABLE_KEY_COL_ROM] not in data_games:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_RED
+                        elif not row[Constants.UI_TABLE_KEY_COL_UNIQUE]:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_ORANGE
+                        else:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
 
                         # Append row
                         table_rows.append(row)
 
                 case Action.INSTALL:
-                    games = FileHelper.list_sub_directories(
-                        folder_path=os.path.join(
-                            Context.get_games_path(),
-                            Context.get_selected_platform().value
-                        )
-                    )
-
-                    for game in games:
-                        # Retrieve the rom file
-                        roms_files = FileHelper.list_relative_paths(
-                            folder_path=os.path.join(
-                                Context.get_games_path(),
-                                Context.get_selected_platform().value,
-                                game,
-                                AbstractGamesExecutor.ROM_FOLDER_NAME
-                            ),
-                            file_name=game,
-                            error_if_not_found=False
-                        )
-
-                        if len(roms_files) == 0:
-                            continue
-
+                    for rom, name in data_games.items():
                         # Build row
                         row = {}
                         row[Constants.UI_TABLE_KEY_COL_SELECTION] = False
                         row[Constants.UI_TABLE_KEY_COL_ID] = FileHelper.retrieve_file_basename(
-                            roms_files[0]
+                            rom
                         )
-                        row[Constants.UI_TABLE_KEY_COL_NAME] = game
-                        row[Constants.UI_TABLE_KEY_COL_ROM] = FileHelper.retrieve_file_name(
-                            roms_files[0]
-                        )
+                        row[Constants.UI_TABLE_KEY_COL_NAME] = name
+                        row[Constants.UI_TABLE_KEY_COL_ROM] = rom
+
+                        # Check if unique
+                        row[Constants.UI_TABLE_KEY_COL_UNIQUE] = list(
+                            data_games.values()
+                        ).count(name) == 1
 
                         # Retrieve color
-                        row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
+                        if row[Constants.UI_TABLE_KEY_COL_ROM] not in selected_software_games:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_RED
+                        elif not row[Constants.UI_TABLE_KEY_COL_UNIQUE]:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_ORANGE
+                        else:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
+
+                        # Append row
+                        table_rows.append(row)
+
+                case Action.UNINSTALL:
+                    for rom, name in data_games.items():
+                        # Build row
+                        row = {}
+                        row[Constants.UI_TABLE_KEY_COL_SELECTION] = False
+                        row[Constants.UI_TABLE_KEY_COL_ID] = FileHelper.retrieve_file_basename(
+                            rom
+                        )
+                        row[Constants.UI_TABLE_KEY_COL_NAME] = name
+                        row[Constants.UI_TABLE_KEY_COL_ROM] = rom
+
+                        # Check if unique
+                        row[Constants.UI_TABLE_KEY_COL_UNIQUE] = list(
+                            data_games.values()
+                        ).count(name) == 1
+
+                        # Retrieve color
+                        if row[Constants.UI_TABLE_KEY_COL_ROM] in selected_software_games:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_RED
+                        elif not row[Constants.UI_TABLE_KEY_COL_UNIQUE]:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_ORANGE
+                        else:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
+
+                        # Append row
+                        table_rows.append(row)
+
+                case Action.DELETE:
+                    for rom, name in data_games.items():
+                        # Build row
+                        row = {}
+                        row[Constants.UI_TABLE_KEY_COL_SELECTION] = False
+                        row[Constants.UI_TABLE_KEY_COL_ID] = FileHelper.retrieve_file_basename(
+                            rom
+                        )
+                        row[Constants.UI_TABLE_KEY_COL_NAME] = name
+                        row[Constants.UI_TABLE_KEY_COL_ROM] = rom
+
+                        # Check if unique
+                        row[Constants.UI_TABLE_KEY_COL_UNIQUE] = list(
+                            data_games.values()
+                        ).count(name) == 1
+
+                        # Retrieve color
+                        if not row[Constants.UI_TABLE_KEY_COL_UNIQUE]:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_ORANGE
+                        else:
+                            row[Constants.UI_TABLE_KEY_COLOR] = Constants.ITEM_COLOR_GREEN
 
                         # Append row
                         table_rows.append(row)
