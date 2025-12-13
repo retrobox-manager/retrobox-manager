@@ -191,7 +191,9 @@ class SkraperManager(AbstractManager):
                     media_path,
                     folder
                 ),
-                file_name='*',
+                file_name=FileHelper.retrieve_file_basename(
+                    game_item[Constants.UI_TABLE_KEY_COL_ID]
+                ),
                 error_if_not_found=False
             )
 
