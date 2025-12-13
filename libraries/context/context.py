@@ -9,7 +9,7 @@ import socket
 import configparser
 import locale
 
-from libraries.constants.constants import Action, Category, Constants, Platform, Software
+from libraries.constants.constants import Action, Category, Component, Constants, Platform, Software
 
 # pylint: disable=unnecessary-comprehension
 # pylint: disable=too-many-public-methods
@@ -37,6 +37,7 @@ class Context:
     __available_softwares: list[Software] = []
     __softwares_paths: dict[Software, Path] = {}
     __selected_rows = []
+    __selected_components = []
 
     @staticmethod
     def init():
@@ -352,6 +353,35 @@ class Context:
             Context.init()
 
         Context.__selected_rows = rows
+
+    @staticmethod
+    def get_selected_components() -> list[Component]:
+        """Get selected components"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        return Context.__selected_components
+
+    @staticmethod
+    def set_selected_components(components_items: list):
+        """Set selected components"""
+
+        if not Context.__initialized:
+            Context.init()
+
+        components_labels = []
+        for components_item in components_items:
+            components_labels.append(
+                components_item[Constants.UI_TABLE_KEY_COL_NAME]
+            )
+
+        result = []
+        for component in Component:
+            if Context.get_text(component.value) in components_labels:
+                result.append(component)
+
+        Context.__selected_components = result
 
     @staticmethod
     def update_context_from_setup():

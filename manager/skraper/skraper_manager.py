@@ -2,13 +2,17 @@
 """Manager for the Software SKRAPER"""
 
 import os
-from libraries.constants.constants import Constants, Media, Platform, Software
+from libraries.constants.constants import Component, Constants, Media, Platform, Software
+from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
 from libraries.xml.xml_helper import XmlHelper
 from manager.abstract_manager import AbstractManager
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-positional-arguments
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
 
 
 class SkraperManager(AbstractManager):
@@ -260,32 +264,35 @@ class SkraperManager(AbstractManager):
         """Uninstall game"""
 
         # Delete media files
-        media_files = self.retrieve_media_files(
-            platform=platform,
-            game_item=game_item
-        )
-        for media_file in media_files.values():
-            FileHelper.delete_file(
-                file_path=media_file
-            )
-
-        # Delete rom file
-        FileHelper.delete_file(
-            file_path=self.retrieve_rom_file(
+        if Component.MEDIA in Context.get_selected_components():
+            media_files = self.retrieve_media_files(
                 platform=platform,
                 game_item=game_item
             )
-        )
+            for media_file in media_files.values():
+                FileHelper.delete_file(
+                    file_path=media_file
+                )
 
-        # Delete tag for the game
-        return XmlHelper.delete_tag(
-            xml_file_path=self.__retrieve_game_list_xml_path(
-                platform=platform
-            ),
-            parent_tag=self.__TAG_GAMES,
-            tag=self.__TAG_GAME,
-            criteria=self.__build_game_criteria(game_item)
-        )
+        # Delete rom file
+        if Component.ROM in Context.get_selected_components():
+            FileHelper.delete_file(
+                file_path=self.retrieve_rom_file(
+                    platform=platform,
+                    game_item=game_item
+                )
+            )
+
+            XmlHelper.delete_tag(
+                xml_file_path=self.__retrieve_game_list_xml_path(
+                    platform=platform
+                ),
+                parent_tag=self.__TAG_GAMES,
+                tag=self.__TAG_GAME,
+                criteria=self.__build_game_criteria(game_item)
+            )
+
+        return True
 
     def install_game(
         self,
@@ -306,16 +313,19 @@ class SkraperManager(AbstractManager):
         # Initialize fields to add
         fields_to_add = {}
 
-        # Copy the rom
+        # Retrieve rom file
         skraper_rom_file = os.path.join(
             self._folder_path,
             self.__PLATFORM_DICT_INV.get(platform, ''),
             FileHelper.retrieve_file_name(rom_file)
         )
-        FileHelper.copy_file(
-            source_file_path=rom_file,
-            destination_file_path=skraper_rom_file
-        )
+
+        # Copy the rom
+        if Component.ROM in Context.get_selected_components():
+            FileHelper.copy_file(
+                source_file_path=rom_file,
+                destination_file_path=skraper_rom_file
+            )
 
         # Add field for the rom
         fields_to_add[self.__TAG_PATH] = self.__FILE_PREFIX
@@ -361,10 +371,12 @@ class SkraperManager(AbstractManager):
                 key,
                 file_name
             )
-            FileHelper.copy_file(
-                source_file_path=media_file,
-                destination_file_path=skraper_media_files[media]
-            )
+
+            if Component.MEDIA in Context.get_selected_components():
+                FileHelper.copy_file(
+                    source_file_path=media_file,
+                    destination_file_path=skraper_media_files[media]
+                )
 
             # Add field for the media
             fields_to_add[key] = self.__FILE_PREFIX
@@ -378,7 +390,8 @@ class SkraperManager(AbstractManager):
             if self.__FILE_PREFIX in line or line.strip() == "":
                 continue
             stripped = line.lstrip()
-            if stripped.startswith(f'<{self.__TAG_GAME}') or stripped.startswith(f'</{self.__TAG_GAME}'):
+            if stripped.startswith(f'<{self.__TAG_GAME}') or \
+                    stripped.startswith(f'</{self.__TAG_GAME}'):
                 lines.append(self.__PARENT_PREFIX + stripped)
             else:
                 lines.append(self.__CHILD_PREFIX + stripped)
@@ -422,7 +435,9 @@ class SkraperManager(AbstractManager):
             1
         )
 
-        return FileHelper.write_file(
+        FileHelper.write_file(
             file_path=game_list_xml_path,
             content=game_list_xml_content
         )
+
+        return True

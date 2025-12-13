@@ -11,7 +11,7 @@ from dialogs.execute.execute_dialog import ExecuteDialog
 from dialogs.setup.setup_dialog import SetupDialog
 from executor.games.abstract_games_executor import AbstractGamesExecutor
 from manager.manager_factory import ManagerFactory
-from libraries.constants.constants import Action, Category, Constants, Platform, Software
+from libraries.constants.constants import Action, Category, Component, Constants, Platform, Software
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
 from libraries.ui.ui_helper import UIHelper
@@ -21,6 +21,7 @@ from libraries.ui.ui_table import UITable
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
+# pylint: disable=too-many-locals
 
 
 class ApplicationWindow:
@@ -30,10 +31,11 @@ class ApplicationWindow:
         """Called when selected rows changed"""
 
         # Retrieve selected rows
-        selected_rows = self.table.get_selected_rows()
+        selected_top_rows = self.table_top.get_selected_rows()
+        selected_bottom_rows = self.table_bottom.get_selected_rows()
 
         # Update execute button state
-        if len(selected_rows) > 0:
+        if len(selected_top_rows) > 0 and len(selected_bottom_rows) > 0:
             self.button_execute.config(state=tk.NORMAL)
         else:
             self.button_execute.config(state=tk.DISABLED)
@@ -52,7 +54,7 @@ class ApplicationWindow:
                     Context.set_selected_category(category)
 
             # Set title for table
-            self.table_frame.config(
+            self.table_top_frame.config(
                 text=Context.get_text(
                     Context.get_selected_category().value
                 )
@@ -136,6 +138,9 @@ class ApplicationWindow:
                 else:
                     self.combo_platform.current(0)
                     self.combo_platform.event_generate("<<ComboboxSelected>>")
+            else:
+                # Update UI
+                self.__update_ui()
 
         # If source is software
         elif event.widget == self.combo_software:
@@ -151,6 +156,7 @@ class ApplicationWindow:
                 software=Context.get_selected_software()
             ).list_platforms():
                 values.append(platform.value)
+            values.sort()
             self.combo_platform.configure(
                 values=values
             )
@@ -344,8 +350,38 @@ class ApplicationWindow:
             )
         )
 
-        self.__create_table(
+        self.__create_table_top(
             rows=sorted_rows
+        )
+
+        # Create table bottom
+        components = []
+        match(Context.get_selected_category()):
+            case Category.GAMES:
+                if Context.get_selected_action() not in [
+                    Action.INSTALL,
+                    Action.UNINSTALL,
+                    Action.DELETE
+                ]:
+                    components.append(Component.INFO)
+                components.append(Component.ROM)
+                components.append(Component.MEDIA)
+
+            case Category.CONFIGS:
+                components.append(Component.FILES)
+                components.append(Component.REGISTRY)
+
+        table_bottom_rows = []
+        for component in components:
+            table_bottom_rows.append({
+                Constants.UI_TABLE_KEY_COL_SELECTION: False,
+                Constants.UI_TABLE_KEY_COL_ID: Context.get_text(component.value),
+                Constants.UI_TABLE_KEY_COL_NAME: Context.get_text(component.value),
+                Constants.UI_TABLE_KEY_COLOR: Constants.ITEM_COLOR_BLACK
+            })
+
+        self.__create_table_bottom(
+            rows=table_bottom_rows
         )
 
     def __load_setup(self):
@@ -370,7 +406,12 @@ class ApplicationWindow:
 
         # Update selected rows in context
         Context.set_selected_rows(
-            self.table.get_selected_rows()
+            self.table_top.get_selected_rows()
+        )
+
+        # Update selected components in context
+        Context.set_selected_components(
+            self.table_bottom.get_selected_rows()
         )
 
         # Update context
@@ -522,37 +563,76 @@ class ApplicationWindow:
             expand=True,
         )
 
-        self.__create_table_frame()
+        self.__create_table_top_frame()
+        self.__create_table_bottom_frame()
 
-    def __create_table(
+    def __create_table_top(
         self,
         rows: list
     ):
-        """Create the table"""
+        """Create the table top"""
 
         # Clear the frame
-        UIHelper.clear_frame(self.table_frame)
+        UIHelper.clear_frame(self.table_top_frame)
 
         # Create the table
-        self.table = UITable(
-            parent=self.table_frame,
+        self.table_top = UITable(
+            parent=self.table_top_frame,
             on_selected_rows_change=self.__on_selected_rows_changed,
             rows=rows
         )
 
-    def __create_table_frame(self):
+    def __create_table_bottom(
+        self,
+        rows: list
+    ):
+        """Create the table bottom"""
+
+        # Clear the frame
+        UIHelper.clear_frame(self.table_bottom_frame)
+
+        # Define if multiple selection
+        multiple_selection = True
+        if Context.get_selected_action() == Action.EDIT:
+            multiple_selection = False
+
+        # Create the table
+        self.table_bottom = UITable(
+            parent=self.table_bottom_frame,
+            on_selected_rows_change=self.__on_selected_rows_changed,
+            rows=rows,
+            multiple_selection=multiple_selection
+        )
+
+    def __create_table_top_frame(self):
         """Create frame for table"""
 
         # Create frame
-        self.table_frame = tk.LabelFrame(
+        self.table_top_frame = tk.LabelFrame(
             self.center_frame,
             text=''
         )
-        self.table_frame.pack(
+        self.table_top_frame.pack(
             side=tk.TOP,
             fill=tk.BOTH,
             expand=True,
             padx=Constants.UI_PAD_BIG
+        )
+
+    def __create_table_bottom_frame(self):
+        """Create frame for table bottom"""
+
+        # Create frame
+        self.table_bottom_frame = tk.LabelFrame(
+            self.center_frame,
+            text=''
+        )
+        self.table_bottom_frame.pack(
+            side=tk.TOP,
+            fill=tk.BOTH,
+            expand=True,
+            padx=Constants.UI_PAD_BIG,
+            pady=Constants.UI_PAD_BIG
         )
 
     def __create_bottom_components(self):
@@ -585,6 +665,11 @@ class ApplicationWindow:
         if Context.is_simulated():
             title += f' {Context.get_text("simulated")}'
         self.__window.title(title)
+
+        # Fix frames text
+        self.table_bottom_frame.config(
+            text=Context.get_text('components')
+        )
 
         # Fix buttons text
         self.button_setup.config(
@@ -621,6 +706,7 @@ class ApplicationWindow:
         for software in Software:
             if software in Context.list_available_softwares():
                 available_softwares.append(software.value)
+        available_softwares.sort()
         self.combo_software.configure(
             values=available_softwares
         )

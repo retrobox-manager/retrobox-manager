@@ -3,7 +3,7 @@
 
 import os
 from executor.games.abstract_games_executor import AbstractGamesExecutor
-from libraries.constants.constants import Action, Constants
+from libraries.constants.constants import Action, Component, Constants
 from libraries.context.context import Context
 from libraries.file.file_helper import FileHelper
 
@@ -20,79 +20,82 @@ class ExportGamesExecutor(AbstractGamesExecutor):
         """Do execution for an item"""
 
         # Copy files for media
-        for media, file_path in self._software_manager.retrieve_media_files(
-            platform=Context.get_selected_platform(),
-            game_item=item
-        ).items():
-            # Retrieve destination's file
-            destination_file_path = os.path.join(
-                Context.get_games_path(),
-                Context.get_selected_platform().value,
-                item[Constants.UI_TABLE_KEY_COL_ID],
-                self.MEDIA_FOLDER_NAME,
-                f'{media.value}{FileHelper.retrieve_file_extension(
-                    file_path=file_path
-                )}'
-            )
+        if Component.MEDIA in Context.get_selected_components():
+            for media, file_path in self._software_manager.retrieve_media_files(
+                platform=Context.get_selected_platform(),
+                game_item=item
+            ).items():
+                # Retrieve destination's file
+                destination_file_path = os.path.join(
+                    Context.get_games_path(),
+                    Context.get_selected_platform().value,
+                    item[Constants.UI_TABLE_KEY_COL_ID],
+                    self.MEDIA_FOLDER_NAME,
+                    f'{media.value}{FileHelper.retrieve_file_extension(
+                        file_path=file_path
+                    )}'
+                )
 
-            # Delete files with the same basename
-            FileHelper.delete_file(
-                file_path=destination_file_path,
-                delete_all_extensions=True
-            )
+                # Delete files with the same basename
+                FileHelper.delete_file(
+                    file_path=destination_file_path,
+                    delete_all_extensions=True
+                )
 
-            # Copy file in destination's folder
-            FileHelper.copy_file(
-                source_file_path=file_path,
-                destination_file_path=destination_file_path
-            )
+                # Copy file in destination's folder
+                FileHelper.copy_file(
+                    source_file_path=file_path,
+                    destination_file_path=destination_file_path
+                )
 
         # Copy rom
-        rom_file = self._software_manager.retrieve_rom_file(
-            platform=Context.get_selected_platform(),
-            game_item=item
-        )
-        if rom_file is not None or FileHelper.is_file_exists(
-            file_path=rom_file
-        ):
-            # Retrieve destination's file
-            destination_file_path = os.path.join(
-                Context.get_games_path(),
-                Context.get_selected_platform().value,
-                item[Constants.UI_TABLE_KEY_COL_ID],
-                self.ROM_FOLDER_NAME,
-                FileHelper.retrieve_file_name(rom_file)
+        if Component.ROM in Context.get_selected_components():
+            rom_file = self._software_manager.retrieve_rom_file(
+                platform=Context.get_selected_platform(),
+                game_item=item
             )
+            if rom_file is not None or FileHelper.is_file_exists(
+                file_path=rom_file
+            ):
+                # Retrieve destination's file
+                destination_file_path = os.path.join(
+                    Context.get_games_path(),
+                    Context.get_selected_platform().value,
+                    item[Constants.UI_TABLE_KEY_COL_ID],
+                    self.ROM_FOLDER_NAME,
+                    FileHelper.retrieve_file_name(rom_file)
+                )
 
-            # Delete files with the same basename
-            FileHelper.delete_file(
-                file_path=destination_file_path,
-                delete_all_extensions=True
-            )
+                # Delete files with the same basename
+                FileHelper.delete_file(
+                    file_path=destination_file_path,
+                    delete_all_extensions=True
+                )
 
-            # Copy file in destination's folder
-            FileHelper.copy_file(
-                source_file_path=rom_file,
-                destination_file_path=destination_file_path
-            )
+                # Copy file in destination's folder
+                FileHelper.copy_file(
+                    source_file_path=rom_file,
+                    destination_file_path=destination_file_path
+                )
 
         # Retrieve game's info
-        game_info = self._software_manager.retrieve_game_info(
-            platform=Context.get_selected_platform(),
-            game_item=item
-        )
+        if Component.INFO in Context.get_selected_components():
+            game_info = self._software_manager.retrieve_game_info(
+                platform=Context.get_selected_platform(),
+                game_item=item
+            )
 
-        # If no game info found, finish the export
-        if len(game_info) == 0:
-            return
+            # If no game info found, finish the export
+            if len(game_info) == 0:
+                return
 
-        # Write content in a XML file
-        FileHelper.write_file(
-            file_path=os.path.join(
-                Context.get_games_path(),
-                Context.get_selected_platform().value,
-                item[Constants.UI_TABLE_KEY_COL_ID],
-                f'{self._software_manager.get_id()}{Constants.XML_EXTENSION}'
-            ),
-            content=game_info
-        )
+            # Write content in a XML file
+            FileHelper.write_file(
+                file_path=os.path.join(
+                    Context.get_games_path(),
+                    Context.get_selected_platform().value,
+                    item[Constants.UI_TABLE_KEY_COL_ID],
+                    f'{self._software_manager.get_id()}{Constants.XML_EXTENSION}'
+                ),
+                content=game_info
+            )

@@ -11,6 +11,16 @@ class Category(Enum):
     CONFIGS = 'category_configs'
 
 
+class Component(Enum):
+    """Component"""
+
+    INFO = 'component_info'
+    ROM = 'component_rom'
+    MEDIA = 'component_media'
+    FILES = 'component_files'
+    REGISTRY = 'component_registry'
+
+
 class Action(Enum):
     """Action"""
 
