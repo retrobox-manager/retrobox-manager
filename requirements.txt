@@ -1,0 +1,4 @@
+screeninfo
+python-vlc
+pyinstaller
+requests
