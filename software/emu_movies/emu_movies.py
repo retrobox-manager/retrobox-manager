@@ -98,7 +98,8 @@ class EmuMovies(AbstractSoftware):
         # List roms relative paths
         roms_relative_paths = FileHelper.list_relative_paths(
             folder_path=folder_path,
-            file_name='*'
+            file_name='*',
+            error_if_not_found=False
         )
 
         # Define relative paths to exclude (included files)

@@ -1,2 +1,5 @@
+R1.1.1 - 2026/04/07
+- fix(refresh): Fix issue with refresh with empty folders
+
 R1.1.0 - 2026/03/01
 - feat(release): Create first release
