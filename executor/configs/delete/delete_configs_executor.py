@@ -40,12 +40,13 @@ class DeleteConfigsExecutor(AbstractConfigsExecutor):
             )
 
         # Delete config if empty
-        if len(FileHelper.list_sub_directories(
+        files, folders = FileHelper.list_files_and_folders(
             folder_path=os.path.join(
                 Context.get_configs_path(),
                 item[Constants.UI_TABLE_KEY_COL_ID]
             )
-        )) == 0:
+        )
+        if len(files) == 0 and len(folders) == 0:
             FileHelper.delete_folder(
                 folder_path=os.path.join(
                     Context.get_configs_path(),

@@ -148,12 +148,13 @@ class RefreshDialog:
 
         # List games with rom for data
         data_dict = {}
-        for game_folder in FileHelper.list_sub_directories(
+        _, folders = FileHelper.list_files_and_folders(
             folder_path=os.path.join(
                 Context.get_games_path(),
                 Context.get_selected_platform()
             )
-        ):
+        )
+        for game_folder in folders:
             # Try to find the rom file
             rom_files = FileHelper.list_relative_paths(
                 folder_path=os.path.join(
@@ -317,24 +318,24 @@ class RefreshDialog:
 
         # List platforms with games counter for data
         data_dict = {}
-        for platform_folder in FileHelper.list_sub_directories(
+        _, folders = FileHelper.list_files_and_folders(
             folder_path=os.path.join(
                 Context.get_games_path()
             )
-        ):
+        )
+        for platform_folder in folders:
             # If platform is not a platform for the selected software
             if platform_folder not in list_platforms:
                 continue
 
             # Count games for platform
-            games_counter = len(
-                FileHelper.list_sub_directories(
-                    folder_path=os.path.join(
-                        Context.get_games_path(),
-                        platform_folder
-                    )
+            _, folders = FileHelper.list_files_and_folders(
+                folder_path=os.path.join(
+                    Context.get_games_path(),
+                    platform_folder
                 )
             )
+            games_counter = len(folders)
 
             data_dict[platform_folder] = games_counter
 
@@ -428,9 +429,10 @@ class RefreshDialog:
         result = []
 
         # Add rows
-        for config in FileHelper.list_sub_directories(
+        _, folders = FileHelper.list_files_and_folders(
             folder_path=Context.get_configs_path()
-        ):
+        )
+        for config in folders:
             item_id = config
 
             # Ignore item to refresh if requested

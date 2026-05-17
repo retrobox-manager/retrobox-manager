@@ -61,12 +61,14 @@ class Skraper(AbstractSoftware):
     def list_roms_folders(self) -> list[str]:
         """List folders where a rom can be found"""
 
-        return FileHelper.list_sub_directories(
+        _, folders = FileHelper.list_files_and_folders(
             folder_path=os.path.join(
                 self.get_context().path,
                 self.__PATH_ROMS
             )
         )
+
+        return folders
 
     def get_default_platform_associations(self) -> dict[str, str]:
         """Get default platform associations"""
@@ -238,9 +240,10 @@ class Skraper(AbstractSoftware):
         )
 
         # Add media for the game
-        for folder in FileHelper.list_sub_directories(
+        _, folders = FileHelper.list_files_and_folders(
             folder_path=media_path
-        ):
+        )
+        for folder in folders:
             media = self.retrieve_media(resource=folder)
             if media is None:
                 continue

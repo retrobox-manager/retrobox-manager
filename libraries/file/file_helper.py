@@ -84,16 +84,33 @@ class FileHelper:
         return size_file1 == size_file2
 
     @staticmethod
-    def list_sub_directories(
+    def list_files_and_folders(
         folder_path: str
-    ) -> list[str]:
+    ) -> tuple[list[str], list[str]]:
         """List sub directories for the specified folder"""
         if not FileHelper.is_folder_exists(
             folder_path=folder_path
         ):
             return []
 
-        return os.listdir(folder_path)
+        # List files and folders for the specified path
+        files_or_folders = os.listdir(folder_path)
+
+        # List files
+        files = [
+            item for item in files_or_folders
+            if not os.path.isdir(os.path.join(folder_path, item))
+            and not item.startswith(".")
+        ]
+
+        # List folders
+        folders = [
+            item for item in files_or_folders
+            if os.path.isdir(os.path.join(folder_path, item))
+            and not item.startswith(".")
+        ]
+
+        return (files, folders)
 
     @staticmethod
     def list_relative_paths(
@@ -106,6 +123,10 @@ class FileHelper:
         if not os.path.isdir(folder_path):
             return []
         for root, dirs, files in os.walk(folder_path):
+            # Ignore hidden folders/files (.DS_Store, .git, etc.)
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
+            files = [f for f in files if not f.startswith(".")]
+
             # If a folder exists with the name of the file, add sub files
             if file_name in dirs:
                 sub_folder_path = os.path.join(

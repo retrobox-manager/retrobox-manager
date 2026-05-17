@@ -33,12 +33,13 @@ class UninstallGamesExecutor(AbstractGamesExecutor):
         )
 
         # List games with rom for data and selected Platform
-        for game_folder in FileHelper.list_sub_directories(
+        _, folders = FileHelper.list_files_and_folders(
             folder_path=os.path.join(
                 Context.get_games_path(),
                 Context.get_selected_platform()
             )
-        ):
+        )
+        for game_folder in folders:
             # Try to find the rom file
             rom_files = FileHelper.list_relative_paths(
                 folder_path=os.path.join(

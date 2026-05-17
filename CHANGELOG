@@ -1,3 +1,6 @@
+R1.1.2 - 2026/05/17
+- fix(list_files_and_folders): Use the function list_files_and_folders to list files and folders for a specified path
+
 R1.1.1 - 2026/04/07
 - fix(refresh): Fix issue with refresh with empty folders
 

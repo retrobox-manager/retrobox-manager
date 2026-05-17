@@ -191,9 +191,10 @@ class ApplicationWindow:
                 else:
                     # Update platforms
                     values = []
-                    for platform in FileHelper.list_sub_directories(
+                    _, folders = FileHelper.list_files_and_folders(
                         folder_path=Context.get_games_path()
-                    ):
+                    )
+                    for platform in folders:
                         values.append(platform)
                     values.sort()
                     self.combo_platform.configure(
