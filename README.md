@@ -11,7 +11,7 @@ Des vidéos tutoriels sont disponibles sur ma chaîne YouTube :
 🎥 [Visiter ma chaîne](https://www.youtube.com/@jaylooty_official)
 
 Tu as une question ou tu veux partager autour du projet ? Rejoins le Discord :  
-💬 [Rejoindre le serveur Discord](https://discord.gg/ArBfCRCA)
+💬 [Rejoindre le serveur Discord](https://discord.gg/WBuKC6kYwa)
 
 Si tu apprécies ce projet, tu peux me soutenir ici :  
 ❤️ [Faire un don](https://own3d.pro/fr/u/jay_looty/tip)
@@ -31,7 +31,7 @@ Tutorial videos are available on my YouTube channel:
 🎥 [Visit my channel](https://www.youtube.com/@jaylooty_official)
 
 Have questions or want to share about the project? Join the Discord server:  
-💬 [Join the Discord server](https://discord.gg/ArBfCRCA)
+💬 [Join the Discord server](https://discord.gg/WBuKC6kYwa)
 
 If you enjoy this project, you can support me here:  
 ❤️ [Donate](https://own3d.pro/fr/u/jay_looty/tip)

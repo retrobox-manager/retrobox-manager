@@ -78,7 +78,7 @@ class AboutDialog:
         links = {
             "YouTube": "https://www.youtube.com/@jaylooty_official",
             "Twitch": "https://twitch.tv/jaylooty_official",
-            "Discord": "https://discord.gg/ArBfCRCA",
+            "Discord": "https://discord.gg/WBuKC6kYwa",
             "GitHub": "https://github.com/JayLooty"
         }
 
